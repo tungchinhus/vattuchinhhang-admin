@@ -1,0 +1,156 @@
+<div class="app-container">
+  <!-- Top Header Bar (always visible) -->
+  <mat-toolbar class="top-header">
+    <div class="header-left">
+      <button mat-icon-button 
+              (click)="sidenavService.toggleCollapse()" 
+              class="menu-toggle-btn"
+              *ngIf="isAuthenticated"
+              [matTooltip]="sidenavService.isOpen() ? 'Ẩn menu' : 'Hiện menu'">
+        <mat-icon>{{ sidenavService.isOpen() ? 'menu_open' : 'menu' }}</mat-icon>
+      </button>
+      <div class="project-info">
+        <span class="project-name">Vật Tư Chính Hãng</span>
+        <mat-icon class="chevron">chevron_right</mat-icon>
+        <span class="current-page">Hệ thống Quản lý</span>
+      </div>
+    </div>
+    <div class="header-right" *ngIf="isAuthenticated">
+      <button mat-icon-button>
+        <mat-icon>help_outline</mat-icon>
+      </button>
+      <button mat-icon-button>
+        <mat-icon>notifications</mat-icon>
+      </button>
+      <button mat-icon-button [matMenuTriggerFor]="userMenu">
+        <mat-icon>account_circle</mat-icon>
+      </button>
+      <mat-menu #userMenu="matMenu">
+        <div class="user-info">
+          <div class="user-avatar">{{getCurrentUserInitials()}}</div>
+          <div class="user-details">
+            <div class="user-name">{{getCurrentUserName()}}</div>
+            <div class="user-email">{{getCurrentUserEmail()}}</div>
+            <div class="user-role">{{getCurrentUserRole()}}</div>
+          </div>
+        </div>
+        <mat-divider></mat-divider>
+        <button mat-menu-item>
+          <mat-icon>person</mat-icon>
+          <span>Thông tin cá nhân</span>
+        </button>
+        <button mat-menu-item>
+          <mat-icon>settings</mat-icon>
+          <span>Cài đặt</span>
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Đăng xuất</span>
+        </button>
+      </mat-menu>
+    </div>
+  </mat-toolbar>
+
+  <!-- Main Content Area - Show layout only when authenticated -->
+  <div class="main-layout" *ngIf="isAuthenticated">
+    <!-- Left Sidebar -->
+    <mat-sidenav #drawer class="sidenav" 
+        mode="side"
+        [opened]="sidenavService.isOpen()"
+        [disableClose]="false"
+        [class.collapsed]="sidenavService.isCollapsed()">
+      
+      <div class="sidenav-header">
+        <div class="brand-section">
+          <div class="brand-logo" [class.collapsed]="sidenavService.isCollapsed()">
+            <div class="logo-container">
+              <mat-icon class="logo-icon">store</mat-icon>
+            </div>
+          </div>
+          <div class="brand-name" [class.hidden]="sidenavService.isCollapsed()">
+            Vật Tư Chính Hãng
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-list">
+        <a routerLink="/dashboard" routerLinkActive="active" 
+           [matTooltip]="sidenavService.isCollapsed() ? 'Dashboard' : ''"
+           matTooltipPosition="right"
+           class="nav-item">
+          <div class="nav-icon">
+            <mat-icon>dashboard</mat-icon>
+          </div>
+          <span class="nav-text" [class.hidden]="sidenavService.isCollapsed()">Dashboard</span>
+        </a>
+        <a routerLink="/san-pham" 
+           [matTooltip]="sidenavService.isCollapsed() ? 'Quản lý sản phẩm' : ''"
+           matTooltipPosition="right"
+           class="nav-item">
+          <div class="nav-icon">
+            <mat-icon>inventory</mat-icon>
+          </div>
+          <span class="nav-text" [class.hidden]="sidenavService.isCollapsed()">Quản lý sản phẩm</span>
+        </a>
+        <a routerLink="/don-hang" 
+           [matTooltip]="sidenavService.isCollapsed() ? 'Quản lý đơn hàng' : ''"
+           matTooltipPosition="right"
+           class="nav-item">
+          <div class="nav-icon">
+            <mat-icon>shopping_cart</mat-icon>
+          </div>
+          <span class="nav-text" [class.hidden]="sidenavService.isCollapsed()">Quản lý đơn hàng</span>
+        </a>
+        <a routerLink="/khach-hang" 
+           [matTooltip]="sidenavService.isCollapsed() ? 'Quản lý khách hàng' : ''"
+           matTooltipPosition="right"
+           class="nav-item">
+          <div class="nav-icon">
+            <mat-icon>people</mat-icon>
+    </div>
+          <span class="nav-text" [class.hidden]="sidenavService.isCollapsed()">Quản lý khách hàng</span>
+        </a>
+        <a routerLink="/nha-cung-cap" 
+           [matTooltip]="sidenavService.isCollapsed() ? 'Quản lý nhà cung cấp' : ''"
+           matTooltipPosition="right"
+           class="nav-item">
+          <div class="nav-icon">
+            <mat-icon>business</mat-icon>
+      </div>
+          <span class="nav-text" [class.hidden]="sidenavService.isCollapsed()">Quản lý nhà cung cấp</span>
+        </a>
+        <a routerLink="/bao-cao" 
+           [matTooltip]="sidenavService.isCollapsed() ? 'Báo cáo' : ''"
+           matTooltipPosition="right"
+           class="nav-item">
+          <div class="nav-icon">
+            <mat-icon>analytics</mat-icon>
+          </div>
+          <span class="nav-text" [class.hidden]="sidenavService.isCollapsed()">Báo cáo</span>
+        </a>
+        <a routerLink="/quan-ly-user" 
+           *ngIf="hasAdminRole()"
+           [matTooltip]="sidenavService.isCollapsed() ? 'Quản lý người dùng' : ''"
+           matTooltipPosition="right"
+           class="nav-item">
+          <div class="nav-icon">
+            <mat-icon>admin_panel_settings</mat-icon>
+          </div>
+          <span class="nav-text" [class.hidden]="sidenavService.isCollapsed()">Quản lý người dùng</span>
+        </a>
+        <div class="nav-spacer"></div>
+      </div>
+    </mat-sidenav>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+      <router-outlet />
+    </div>
+  </div>
+
+  <!-- Content for non-authenticated pages -->
+  <div *ngIf="!isAuthenticated">
+<router-outlet />
+  </div>
+</div>
