@@ -1,7 +1,15 @@
 {
   "projects": {
-    "default": "vattuchinhhang-admin"
-  }
+    "default": "vattuchinhhang-c5952"
+  },
+  "targets": {
+    "vattuchinhhang-c5952": {
+      "hosting": {
+        "vattuchinhhang-admin": [
+          "vattuchinhhang-admin"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
-
-

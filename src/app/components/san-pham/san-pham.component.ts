@@ -22,6 +22,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
+import { ProductsService } from '../../services/products.service';
+import { ImageUploadService } from '../../services/image-upload.service';
 import { 
   Product, 
   ProductCategory, 
@@ -91,6 +93,11 @@ export class SanPhamComponent implements OnInit {
   isDialogOpen = signal(false);
   isEditMode = signal(false);
   currentProduct = signal<Product | null>(null);
+  
+  // Image upload
+  selectedFiles: File[] = [];
+  uploadedImageUrls: string[] = [];
+  isUploading = signal(false);
   
   // Form
   productForm: FormGroup;
@@ -214,7 +221,9 @@ export class SanPhamComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private productsService: ProductsService,
+    private imageUploadService: ImageUploadService
   ) {
     this.filterForm = this.fb.group({
       category: [''],
@@ -348,6 +357,8 @@ export class SanPhamComponent implements OnInit {
       isFeatured: false,
       isNew: false
     });
+    this.selectedFiles = [];
+    this.uploadedImageUrls = [];
     this.isDialogOpen.set(true);
   }
 
@@ -362,9 +373,11 @@ export class SanPhamComponent implements OnInit {
     this.isDialogOpen.set(false);
     this.currentProduct.set(null);
     this.productForm.reset();
+    this.selectedFiles = [];
+    this.uploadedImageUrls = [];
   }
 
-  saveProduct(): void {
+  async saveProduct(): Promise<void> {
     if (this.productForm.valid) {
       const formData = this.productForm.value as ProductFormData;
       
@@ -387,19 +400,40 @@ export class SanPhamComponent implements OnInit {
           duration: 3000
         });
       } else {
-        // Add new product
-        const newProduct: Product = {
-          id: Date.now().toString(),
-          ...formData,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-        
-        this.products.set([...this.products(), newProduct]);
-        
-        this.snackBar.open('Thêm sản phẩm thành công!', 'Đóng', {
-          duration: 3000
-        });
+        try {
+          this.isLoading.set(true);
+          
+          // Upload images first if any
+          let imageUrls: string[] = [];
+          if (this.selectedFiles.length > 0) {
+            this.isUploading.set(true);
+            const tempId = Date.now().toString(); // Temporary ID for upload
+            imageUrls = await this.imageUploadService.uploadMultipleImages(this.selectedFiles, tempId);
+            this.isUploading.set(false);
+          }
+          
+          // Add image URLs to form data
+          const formDataWithImages = {
+            ...formData,
+            images: imageUrls
+          };
+          
+          const id = await this.productsService.addProduct(formDataWithImages);
+          const newProduct: Product = {
+            id,
+            ...formDataWithImages,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          };
+          this.products.set([...this.products(), newProduct]);
+          this.snackBar.open('Thêm sản phẩm thành công!', 'Đóng', { duration: 3000 });
+        } catch (error) {
+          console.error(error);
+          this.snackBar.open('Lỗi khi thêm sản phẩm. Vui lòng thử lại!', 'Đóng', { duration: 4000 });
+        } finally {
+          this.isLoading.set(false);
+          this.isUploading.set(false);
+        }
       }
       
       this.applyFilters();
@@ -484,5 +518,36 @@ export class SanPhamComponent implements OnInit {
 
   getStatusDisplayName(status: ProductStatus): string {
     return this.statusDisplayNames[status] || status;
+  }
+
+  // Image upload methods
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedFiles = Array.from(input.files);
+      this.previewImages();
+    }
+  }
+
+  previewImages(): void {
+    this.uploadedImageUrls = [];
+    this.selectedFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        this.uploadedImageUrls.push(result);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  removeImage(index: number): void {
+    this.selectedFiles.splice(index, 1);
+    this.uploadedImageUrls.splice(index, 1);
+  }
+
+  clearAllImages(): void {
+    this.selectedFiles = [];
+    this.uploadedImageUrls = [];
   }
 }

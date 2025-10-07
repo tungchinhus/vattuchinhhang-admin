@@ -1,9 +1,10 @@
 .page-container {
   padding: 16px;
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   min-height: 100vh;
+  box-sizing: border-box;
 }
 
 /* Page Header */
@@ -72,6 +73,7 @@
   background: white;
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
+  width: 100%;
 }
 
 .filter-card mat-card-content {
@@ -134,6 +136,7 @@
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
+  width: 100%;
 }
 
 .table-card mat-card-content {
@@ -159,6 +162,7 @@
 .table-container {
   overflow-x: auto;
   background: white;
+  width: 100%;
 }
 
 .products-table {
@@ -448,6 +452,108 @@
 .features-section,
 .images-section {
   padding: 24px 0;
+}
+
+/* Image Upload Styles */
+.upload-area {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 20px;
+  border: 2px dashed #e0e0e0;
+  border-radius: 12px;
+  background-color: #fafafa;
+  transition: all 0.3s ease;
+}
+
+.upload-area:hover {
+  border-color: #1976d2;
+  background-color: #f3f8ff;
+}
+
+.upload-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+}
+
+.upload-progress p {
+  margin: 0;
+  color: #666;
+  font-weight: 500;
+}
+
+.image-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.image-preview-item {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.image-preview-item:hover {
+  transform: scale(1.02);
+}
+
+.image-preview-item img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  display: block;
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: rgba(244, 67, 54, 0.9);
+  color: white;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+}
+
+.remove-image-btn:hover {
+  background-color: #d32f2f;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #999;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  border: 2px dashed #e0e0e0;
+}
+
+.empty-state mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 16px;
+  color: #ccc;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
 }
 
 .specifications-section h3,
