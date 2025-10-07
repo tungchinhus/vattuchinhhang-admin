@@ -134,3 +134,53 @@ input, textarea, select {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--vattuchinhhang-dark);
 }
+
+/* Global Material Design Fixes for Dropdown Transparency */
+.mat-mdc-select-panel,
+.mat-mdc-menu-panel,
+.mat-mdc-dialog-container,
+.cdk-overlay-pane {
+  background: white !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.mat-mdc-option,
+.mat-mdc-menu-item {
+  background: white !important;
+  color: #333 !important;
+}
+
+.mat-mdc-option:hover,
+.mat-mdc-menu-item:hover {
+  background: #f8f9fa !important;
+}
+
+/* Ensure proper z-index for overlays */
+.cdk-overlay-container {
+  z-index: 1000 !important;
+}
+
+/* Fix for Material Select dropdown transparency */
+.mat-mdc-select-panel {
+  background: white !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
+  overflow: hidden !important;
+}
+
+.mat-mdc-option {
+  background: white !important;
+  color: #333 !important;
+  transition: all 0.2s ease !important;
+}
+
+.mat-mdc-option:hover {
+  background: #f8f9fa !important;
+  color: #333 !important;
+}
+
+.mat-mdc-option.mat-mdc-option-active {
+  background: #e3f2fd !important;
+  color: #1976d2 !important;
+}

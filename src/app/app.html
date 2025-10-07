@@ -85,6 +85,7 @@
           <span class="nav-text" [class.hidden]="sidenavService.isCollapsed()">Dashboard</span>
         </a>
         <a routerLink="/san-pham" 
+           routerLinkActive="active"
            [matTooltip]="sidenavService.isCollapsed() ? 'Quản lý sản phẩm' : ''"
            matTooltipPosition="right"
            class="nav-item">
