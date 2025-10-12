@@ -12,11 +12,20 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   canActivate(): boolean {
-    if (this.authService.isAuthenticated()) {
+    console.log('=== AUTHGUARD CALLED ===');
+    console.log('AuthGuard: Route being accessed');
+    
+    // Check authentication status
+    const isAuth = this.authService.isAuthenticated();
+    console.log('AuthGuard: Checking authentication, isAuth =', isAuth);
+    
+    if (isAuth) {
+      console.log('AuthGuard: User is authenticated, allowing access');
       return true;
-    } else {
-      this.router.navigate(['/dang-nhap']);
-      return false;
     }
+    
+    console.log('AuthGuard: User not authenticated, redirecting to login');
+    this.router.navigate(['/dang-nhap']);
+    return false;
   }
 }

@@ -1,38 +1,164 @@
 <div class="login-container">
-  <div class="login-card">
-    <div class="login-header">
-      <h1>Vật Tư Chính Hãng</h1>
-      <p>Hệ thống quản lý</p>
-    </div>
-    
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Tên đăng nhập</mat-label>
-        <input matInput formControlName="username" placeholder="Nhập tên đăng nhập">
-        <mat-icon matSuffix>person</mat-icon>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Mật khẩu</mat-label>
-        <input matInput type="password" formControlName="password" placeholder="Nhập mật khẩu">
-        <mat-icon matSuffix>lock</mat-icon>
-      </mat-form-field>
-
-      <div class="error-message" *ngIf="errorMessage">
-        {{ errorMessage }}
+  <div class="login-background">
+    <div class="background-pattern"></div>
+  </div>
+  
+  <div class="login-content">
+    <div class="login-card">
+      <div class="login-header">
+        <h2 class="login-title">Đăng nhập hệ thống</h2>
       </div>
 
-      <button mat-raised-button color="primary" type="submit" 
-              class="login-button" 
-              [disabled]="loginForm.invalid || isLoading">
-        <mat-icon *ngIf="!isLoading">login</mat-icon>
-        <mat-icon *ngIf="isLoading" class="spinning">refresh</mat-icon>
-        {{ isLoading ? 'Đang đăng nhập...' : 'Đăng nhập' }}
-      </button>
-    </form>
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form" [class.ng-invalid]="loginForm.invalid && loginForm.touched">
+        <div class="form-fields">
+          <mat-form-field appearance="outline" class="full-width" [class.mat-form-field-invalid]="loginForm.get('username')?.invalid && loginForm.get('username')?.touched">
+            <mat-label>Tên đăng nhập hoặc Email</mat-label>
+            <input matInput 
+                   formControlName="username" 
+                   placeholder="Tên đăng nhập hoặc Email*"
+                   autocomplete="username"
+                   required>
+            <mat-icon matSuffix>person</mat-icon>
+            <mat-error>{{getErrorMessage('username')}}</mat-error>
+          </mat-form-field>
 
-    <div class="login-footer">
-      <p>Demo: admin / admin</p>
+          <mat-form-field appearance="outline" class="full-width" [class.mat-form-field-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+            <mat-label>Mật khẩu</mat-label>
+            <input matInput 
+                   [type]="hidePassword ? 'password' : 'text'"
+                   formControlName="password" 
+                   placeholder="Mật khẩu*"
+                   autocomplete="current-password"
+                   required>
+            <button mat-icon-button 
+                    matSuffix 
+                    type="button"
+                    (click)="togglePasswordVisibility()"
+                    [attr.aria-label]="'Hide password'"
+                    [attr.aria-pressed]="hidePassword">
+              <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+            </button>
+            <mat-error>{{getErrorMessage('password')}}</mat-error>
+          </mat-form-field>
+
+          <div class="form-options">
+            <mat-checkbox formControlName="rememberMe" class="remember-me">
+              Ghi nhớ đăng nhập
+            </mat-checkbox>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button mat-raised-button 
+                  color="primary" 
+                  type="submit"
+                  [disabled]="isLoading"
+                  class="login-button">
+            <mat-spinner *ngIf="isLoading" 
+                         diameter="20" 
+                         class="button-spinner">
+            </mat-spinner>
+            <mat-icon *ngIf="!isLoading">arrow_forward</mat-icon>
+            {{isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}}
+          </button>
+        </div>
+
+        <!-- Google Sign-In Section -->
+        <div class="google-signin-section">
+          <mat-divider>
+            <span class="divider-text">hoặc</span>
+          </mat-divider>
+          
+          <button mat-stroked-button 
+                  color="primary" 
+                  (click)="onGoogleSignIn()"
+                  [disabled]="isLoading"
+                  class="google-signin-button">
+            <img src="https://developers.google.com/identity/images/g-logo.png" 
+                 alt="Google" 
+                 class="google-logo">
+            <span>Đăng nhập bằng Google</span>
+          </button>
+          
+          <div class="super-admin-info">
+            <mat-icon>admin_panel_settings</mat-icon>
+            <span>tungchinhus@gmail.com có quyền Siêu quản trị viên</span>
+          </div>
+        </div>
+      </form>
+
+      <!-- Demo section for testing validation -->
+      <div class="demo-section">
+        <mat-divider></mat-divider>
+        <div class="demo-header">
+          <h4>Test Validation & Auth</h4>
+          <p>Nhấn để test các trường hợp lỗi và authentication</p>
+        </div>
+        
+        <!-- Quick Login Section -->
+        <div class="quick-login-section">
+          <h5>🚀 Đăng nhập nhanh</h5>
+          <button mat-raised-button 
+                  color="warn" 
+                  class="quick-login-button"
+                  (click)="quickLoginSuperAdmin()"
+                  [disabled]="isLoading">
+            <mat-icon>admin_panel_settings</mat-icon>
+            Đăng nhập Super Admin (tungchinhus@gmail.com)
+          </button>
+          <p class="quick-login-note">Sử dụng Google Sign-In với tài khoản Super Admin</p>
+        </div>
+        
+        <div class="demo-buttons">
+          <button mat-stroked-button 
+                  color="warn" 
+                  class="demo-button"
+                  (click)="testValidation()">
+            <mat-icon>error</mat-icon>
+            Test Lỗi
+          </button>
+          
+          <button mat-stroked-button 
+                  color="primary" 
+                  class="demo-button"
+                  (click)="clearForm()">
+            <mat-icon>clear</mat-icon>
+            Xóa Form
+          </button>
+          
+          <button mat-stroked-button 
+                  color="accent" 
+                  class="demo-button"
+                  (click)="testLogout()">
+            <mat-icon>logout</mat-icon>
+            Test Logout
+          </button>
+          
+                 <button mat-stroked-button 
+                         color="warn" 
+                         class="demo-button"
+                         (click)="testAuthState()">
+                   <mat-icon>info</mat-icon>
+                   Check Auth
+                 </button>
+                 
+                 <button mat-stroked-button 
+                         color="accent" 
+                         class="demo-button"
+                         (click)="forceClearAuth()">
+                   <mat-icon>clear_all</mat-icon>
+                   Force Clear Auth
+                 </button>
+                 
+                 <button mat-stroked-button 
+                         color="warn" 
+                         class="demo-button"
+                         routerLink="/force-create-user">
+                   <mat-icon>person_add</mat-icon>
+                   Force Create User
+                 </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>

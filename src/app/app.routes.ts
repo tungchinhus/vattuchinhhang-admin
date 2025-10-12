@@ -42,12 +42,50 @@ export const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
-    path: 'quan-ly-user',
-    loadComponent: () => import('./components/quan-ly-user/quan-ly-user.component').then(m => m.QuanLyUserComponent),
-    canActivate: [AuthGuard],
-    data: { 
-      roles: ['admin', 'super_admin'],
-      permissions: ['user_view']
-    }
-  }
+    path: 'auth-test',
+    loadComponent: () => import('./components/auth-test/auth-test.component').then(m => m.AuthTestComponent),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'user-management',
+    loadComponent: () => import('./components/user-management/user-management.component').then(m => m.UserManagementComponent),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'admin-setup',
+    loadComponent: () => import('./components/admin-setup/admin-setup.component').then(m => m.AdminSetupComponent),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'auth-debug',
+    loadComponent: () => import('./components/auth-debug/auth-debug.component').then(m => m.AuthDebugComponent),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'force-create-user',
+    loadComponent: () => import('./components/force-create-user/force-create-user.component').then(m => m.ForceCreateUserComponent)
+  },
+  {
+    path: 'simple-debug',
+    loadComponent: () => import('./components/simple-debug/simple-debug.component').then(m => m.SimpleDebugComponent)
+  },
+  {
+    path: 'login-debug',
+    loadComponent: () => import('./components/login-debug/login-debug.component').then(m => m.LoginDebugComponent)
+  },
+  {
+    path: 'user-demo',
+    loadComponent: () => import('./components/user-demo/user-demo.component').then(m => m.UserDemoComponent),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'role-persistence-test',
+    loadComponent: () => import('./components/role-persistence-test/role-persistence-test.component').then(m => m.RolePersistenceTestComponent),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'role-management',
+    loadComponent: () => import('./components/role-management/role-management.component').then(m => m.RoleManagementComponent),
+    canActivate: [AuthGuard]
+  },
 ];

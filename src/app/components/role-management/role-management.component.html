@@ -1,0 +1,276 @@
+<div class="role-management-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="header-content">
+      <div class="header-text">
+        <h1 class="page-title">
+          <mat-icon class="title-icon">admin_panel_settings</mat-icon>
+          Quản lý Vai trò
+        </h1>
+        <p class="page-subtitle">Phân quyền và quản lý vai trò người dùng trong hệ thống</p>
+      </div>
+      <div class="header-actions">
+        <button mat-fab color="primary" (click)="loadData()" matTooltip="Làm mới dữ liệu">
+          <mat-icon>refresh</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Role Statistics Cards -->
+  <div class="stats-section">
+    <h2 class="section-title">
+      <mat-icon>analytics</mat-icon>
+      Thống kê vai trò
+    </h2>
+    <div class="stats-grid">
+      <div class="stat-card" *ngFor="let stat of roleStats | keyvalue; let i = index" 
+           [style.animation-delay]="(i * 0.1) + 's'">
+        <div class="stat-card-content">
+          <div class="stat-icon-wrapper" [ngClass]="'icon-' + stat.key">
+            <mat-icon class="stat-icon">{{ getRoleIcon(stat.key) }}</mat-icon>
+          </div>
+          <div class="stat-info">
+            <div class="stat-number">{{ stat.value }}</div>
+            <div class="stat-label">{{ getRoleDisplayName(stat.key) }}</div>
+          </div>
+        </div>
+        <div class="stat-card-footer">
+          <mat-icon class="trend-icon">trending_up</mat-icon>
+          <span class="trend-text">Hoạt động</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="content-grid">
+    <!-- Role Assignments -->
+    <div class="assignments-section">
+      <div class="section-header">
+        <h2 class="section-title">
+          <mat-icon>group</mat-icon>
+          Phân quyền người dùng
+        </h2>
+        <div class="section-actions">
+          <button mat-stroked-button color="primary" (click)="loadData()">
+            <mat-icon>refresh</mat-icon>
+            Làm mới
+          </button>
+        </div>
+      </div>
+      
+      <div class="table-card">
+        <div class="table-header" *ngIf="roleAssignments.length === 0">
+          <div class="empty-state">
+            <mat-icon class="empty-icon">inbox</mat-icon>
+            <h3>Chưa có phân quyền nào</h3>
+            <p>Bắt đầu bằng cách gán vai trò cho người dùng</p>
+          </div>
+        </div>
+        
+        <div class="table-container" *ngIf="roleAssignments.length > 0">
+          <table mat-table [dataSource]="roleAssignments" class="assignments-table">
+            <ng-container matColumnDef="email">
+              <th mat-header-cell *matHeaderCellDef>
+                <mat-icon class="column-icon">email</mat-icon>
+                Email
+              </th>
+              <td mat-cell *matCellDef="let assignment">
+                <div class="user-info">
+                  <mat-icon class="user-avatar">person</mat-icon>
+                  <span class="user-email">{{ assignment.email }}</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="role">
+              <th mat-header-cell *matHeaderCellDef>
+                <mat-icon class="column-icon">security</mat-icon>
+                Vai trò
+              </th>
+              <td mat-cell *matCellDef="let assignment">
+                <div class="role-badge" [ngClass]="'role-' + assignment.role">
+                  <mat-icon class="role-icon">{{ getRoleIcon(assignment.role) }}</mat-icon>
+                  <span class="role-text">{{ getRoleDisplayName(assignment.role) }}</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="assignedAt">
+              <th mat-header-cell *matHeaderCellDef>
+                <mat-icon class="column-icon">schedule</mat-icon>
+                Ngày gán
+              </th>
+              <td mat-cell *matCellDef="let assignment">
+                <div class="date-info">
+                  <mat-icon class="date-icon">event</mat-icon>
+                  <span class="date-text">{{ assignment.assignedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="reason">
+              <th mat-header-cell *matHeaderCellDef>
+                <mat-icon class="column-icon">note</mat-icon>
+                Lý do
+              </th>
+              <td mat-cell *matCellDef="let assignment">
+                <span class="reason-text">{{ assignment.reason || 'Không có lý do' }}</span>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>
+                <mat-icon class="column-icon">settings</mat-icon>
+                Thao tác
+              </th>
+              <td mat-cell *matCellDef="let assignment">
+                <button mat-icon-button color="warn" (click)="removeRole(assignment)" 
+                        matTooltip="Xóa vai trò" class="action-button">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="assignmentColumns" class="table-header-row"></tr>
+            <tr mat-row *matRowDef="let row; columns: assignmentColumns;" class="table-row"></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Assign New Role Form -->
+    <div class="assign-form-section">
+      <div class="form-card">
+        <div class="form-header">
+          <h2 class="section-title">
+            <mat-icon>person_add</mat-icon>
+            Gán vai trò mới
+          </h2>
+        </div>
+        
+        <form [formGroup]="assignForm" (ngSubmit)="assignRole()" class="assign-form">
+          <div class="form-content">
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Email người dùng</mat-label>
+              <input matInput formControlName="email" placeholder="Nhập email người dùng">
+              <mat-icon matSuffix>email</mat-icon>
+              <mat-error *ngIf="assignForm.get('email')?.hasError('required')">
+                Email là bắt buộc
+              </mat-error>
+              <mat-error *ngIf="assignForm.get('email')?.hasError('email')">
+                Email không hợp lệ
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Vai trò</mat-label>
+              <mat-select formControlName="role">
+                <mat-option *ngFor="let role of availableRoles" [value]="role">
+                  <div class="role-option">
+                    <mat-icon class="option-icon">{{ getRoleIcon(role) }}</mat-icon>
+                    <span class="option-text">{{ getRoleDisplayName(role) }}</span>
+                  </div>
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Lý do (tùy chọn)</mat-label>
+              <textarea matInput formControlName="reason" rows="3" 
+                        placeholder="Nhập lý do gán vai trò này"></textarea>
+            </mat-form-field>
+          </div>
+
+          <div class="form-actions">
+            <button mat-raised-button color="primary" type="submit" 
+                    [disabled]="assignForm.invalid" class="submit-button">
+              <mat-icon>add</mat-icon>
+              Gán vai trò
+            </button>
+            <button mat-stroked-button type="button" (click)="assignForm.reset()" class="reset-button">
+              <mat-icon>refresh</mat-icon>
+              Làm mới
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pending Requests -->
+  <div class="requests-section" *ngIf="pendingRequests.length > 0">
+    <div class="section-header">
+      <h2 class="section-title">
+        <mat-icon>pending_actions</mat-icon>
+        Yêu cầu thay đổi vai trò
+      </h2>
+    </div>
+    
+    <div class="table-card">
+      <div class="table-container">
+        <table mat-table [dataSource]="pendingRequests" class="requests-table">
+          <ng-container matColumnDef="email">
+            <th mat-header-cell *matHeaderCellDef>
+              <mat-icon class="column-icon">email</mat-icon>
+              Email
+            </th>
+            <td mat-cell *matCellDef="let request">{{ request.email }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="requestedRole">
+            <th mat-header-cell *matHeaderCellDef>
+              <mat-icon class="column-icon">security</mat-icon>
+              Vai trò yêu cầu
+            </th>
+            <td mat-cell *matCellDef="let request">
+              <div class="role-badge" [ngClass]="'role-' + request.requestedRole">
+                <mat-icon class="role-icon">{{ getRoleIcon(request.requestedRole) }}</mat-icon>
+                <span class="role-text">{{ getRoleDisplayName(request.requestedRole) }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="reason">
+            <th mat-header-cell *matHeaderCellDef>
+              <mat-icon class="column-icon">note</mat-icon>
+              Lý do
+            </th>
+            <td mat-cell *matCellDef="let request">{{ request.reason }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="requestedAt">
+            <th mat-header-cell *matHeaderCellDef>
+              <mat-icon class="column-icon">schedule</mat-icon>
+              Ngày yêu cầu
+            </th>
+            <td mat-cell *matCellDef="let request">
+              {{ request.requestedAt | date:'dd/MM/yyyy HH:mm' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>
+              <mat-icon class="column-icon">settings</mat-icon>
+              Thao tác
+            </th>
+            <td mat-cell *matCellDef="let request">
+              <button mat-icon-button color="primary" (click)="approveRequest(request)" 
+                      matTooltip="Phê duyệt" class="action-button approve">
+                <mat-icon>check</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="rejectRequest(request)" 
+                      matTooltip="Từ chối" class="action-button reject">
+                <mat-icon>close</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="requestColumns" class="table-header-row"></tr>
+          <tr mat-row *matRowDef="let row; columns: requestColumns;" class="table-row"></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

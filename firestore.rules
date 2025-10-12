@@ -1,0 +1,133 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to get user role from multiple sources
+    function getUserRole(userId) {
+      let roleAssignment = get(/databases/$(database)/documents/role_assignments/$(userId));
+      let userDoc = get(/databases/$(database)/documents/users/$(userId));
+      
+      return roleAssignment != null ? roleAssignment.data.role : 
+             userDoc != null ? userDoc.data.role : "customer";
+    }
+    
+    // Helper function to check if user has specific role
+    function hasRole(userId, role) {
+      return getUserRole(userId) == role;
+    }
+    
+    // Helper function to check if user is admin or super admin
+    function isAdmin(userId) {
+      let role = getUserRole(userId);
+      return role == "admin" || role == "super_admin";
+    }
+    
+    // Helper function to check if user is super admin
+    function isSuperAdmin(userId) {
+      return getUserRole(userId) == "super_admin";
+    }
+
+    // === BOOTSTRAP COLLECTION (temporary) ===
+    match /bootstrap/{bootstrapId} {
+      // Allow anyone authenticated to create bootstrap requests
+      allow create: if request.auth != null 
+                    && request.resource.data.role == "super_admin"
+                    && request.resource.data.userId == request.auth.uid;
+      
+      // Allow reading bootstrap requests
+      allow read: if request.auth != null;
+      
+      // Allow deleting bootstrap requests
+      allow delete: if request.auth != null;
+    }
+
+    // === ROLE ASSIGNMENTS COLLECTION ===
+    match /role_assignments/{assignmentId} {
+      // Allow anyone to read role assignments (for debugging)
+      allow read: if request.auth != null;
+      
+      // Only super admins can create/update/delete role assignments
+      allow create, update, delete: if request.auth != null && isSuperAdmin(request.auth.uid);
+    }
+    
+    // === ROLE CHANGE REQUESTS COLLECTION ===
+    match /role_change_requests/{requestId} {
+      // Users can read their own requests
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      
+      // Admins can read all requests
+      allow read: if request.auth != null && isAdmin(request.auth.uid);
+      
+      // Users can create requests for themselves
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      
+      // Only super admins can approve/reject requests
+      allow update: if request.auth != null && isSuperAdmin(request.auth.uid);
+    }
+    
+    // === USERS COLLECTION ===
+    match /users/{userId} {
+      // Allow authenticated users to read users collection
+      allow read: if request.auth != null;
+      
+      // Allow anyone to create super_admin user (for bootstrap)
+      allow create: if request.auth != null 
+                    && request.resource.data.role == "super_admin"
+                    && request.resource.data.email == request.auth.token.email;
+      
+      // Only allow manual user creation (no auto-creation)
+      allow create: if request.auth != null 
+                    && request.auth.uid == userId
+                    && (request.resource.data.role == "customer" 
+                        || request.resource.data.role == "seller"
+                        || request.resource.data.role == "admin"
+                        || (request.resource.data.role == "super_admin" && isSuperAdmin(request.auth.uid)));
+      
+      // Allow users to update their own data
+      allow update: if request.auth != null && request.auth.uid == userId;
+      
+      // Only super admin can delete users
+      allow delete: if request.auth != null && isSuperAdmin(request.auth.uid);
+    }
+
+    // === PRODUCTS COLLECTION ===
+    match /products/{productId} {
+      // Ai cũng đọc được sản phẩm đã duyệt
+      allow read: if resource.data.status == "approved";
+
+      // Người bán đăng sản phẩm mới (status = pending)
+      allow create: if request.auth != null && hasRole(request.auth.uid, "seller");
+
+      // Người bán chỉ sửa sản phẩm của mình khi còn pending
+      allow update: if request.auth != null 
+                    && request.auth.uid == resource.data.sellerId
+                    && resource.data.status == "pending";
+
+      // Admin có quyền duyệt hoặc từ chối
+      allow update: if request.auth != null && isAdmin(request.auth.uid);
+    }
+
+    // === CATEGORIES COLLECTION ===
+    match /categories/{categoryId} {
+      allow read: if true; // Ai cũng xem được
+      allow write: if request.auth != null && isAdmin(request.auth.uid); // Chỉ admin thêm/sửa
+    }
+
+    // === ORDERS COLLECTION ===
+    match /orders/{orderId} {
+      // Người mua chỉ được xem đơn hàng của mình
+      allow read, create: if request.auth != null 
+                          && request.auth.uid == request.resource.data.buyerId;
+
+      // Người bán xem đơn hàng liên quan đến mình
+      allow read: if request.auth != null 
+                  && request.auth.uid == resource.data.sellerId;
+
+      // Không ai ngoài buyer/seller và admin được chỉnh sửa
+      allow update: if request.auth != null 
+                    && (request.auth.uid == resource.data.buyerId 
+                        || request.auth.uid == resource.data.sellerId
+                        || isAdmin(request.auth.uid));
+    }
+  }
+}

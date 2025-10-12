@@ -1,6 +1,6 @@
 import { Component, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterModule } from '@angular/router';
+import { RouterOutlet, RouterModule, Router } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -39,15 +39,28 @@ export class App implements OnInit, OnDestroy {
 
   constructor(
     public sidenavService: SidenavService,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
+    // Subscribe to authentication state changes
     this.authService.isAuthenticated$
       .pipe(takeUntil(this.destroy$))
       .subscribe((isAuth: boolean) => {
+        console.log('App: Authentication state changed:', isAuth);
         this.isAuthenticated = isAuth;
+        
+        // If not authenticated and not on login page, redirect to login
+        if (!isAuth && !this.isOnLoginPage()) {
+          console.log('App: Not authenticated, redirecting to login');
+          this.router.navigate(['/dang-nhap']);
+        }
       });
+  }
+
+  private isOnLoginPage(): boolean {
+    return this.router.url === '/dang-nhap' || this.router.url === '/';
   }
 
   ngOnDestroy(): void {
@@ -62,13 +75,13 @@ export class App implements OnInit, OnDestroy {
   getCurrentUserInitials(): string {
     const user = this.authService.getCurrentUser();
     if (!user) return 'U';
-    const name = user.fullName || user.username;
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+    const name = user.fullName || user.email || 'User';
+    return name.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2);
   }
 
   getCurrentUserName(): string {
     const user = this.authService.getCurrentUser();
-    return user?.fullName || user?.username || 'Người dùng';
+    return user?.fullName || user?.email || 'Người dùng';
   }
 
   getCurrentUserEmail(): string {
@@ -80,18 +93,26 @@ export class App implements OnInit, OnDestroy {
     const user = this.authService.getCurrentUser();
     if (!user) return 'User';
     
-    const roles = Array.isArray(user.roles) ? user.roles : [];
-    if (roles.length === 0) return 'User';
-    
-    const role = roles[0];
-    return typeof role === 'string' ? role : (role as any).name || 'User';
+    switch (user.role) {
+      case 'super_admin':
+        return 'Siêu quản trị viên';
+      case 'admin':
+        return 'Quản trị viên';
+      case 'seller':
+        return 'Người bán';
+      case 'customer':
+        return 'Khách hàng';
+      default:
+        return 'User';
+    }
   }
 
   hasAdminRole(): boolean {
-    return this.authService.hasAnyRoleSync(['admin', 'super_admin']);
+    return this.authService.isAdmin() || this.authService.isSuperAdmin();
   }
 
   logout(): void {
+    console.log('App: Logout button clicked');
     this.authService.logout();
   }
 

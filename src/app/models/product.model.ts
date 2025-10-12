@@ -1,26 +1,15 @@
 export interface Product {
   id: string;
+  sellerId: string;
   name: string;
-  model: string;
-  category: ProductCategory;
-  brand: string;
-  price: number;
-  originalPrice?: number;
   description: string;
-  specifications: ProductSpecification[];
-  features: string[];
-  images: string[];
-  status: ProductStatus;
+  price: number;
   stock: number;
-  sku: string;
-  warranty: string;
-  origin: string;
+  images: string[];
+  categoryId: string;
+  status: ProductStatus;
   createdAt: Date;
-  updatedAt: Date;
-  tags: string[];
-  isFeatured: boolean;
-  isNew: boolean;
-  discount?: number;
+  approvedAt?: Date;
 }
 
 export enum ProductCategory {
@@ -35,10 +24,9 @@ export enum ProductCategory {
 }
 
 export enum ProductStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  OUT_OF_STOCK = 'out_of_stock',
-  DISCONTINUED = 'discontinued'
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected'
 }
 
 export interface ProductSpecification {
@@ -61,25 +49,14 @@ export interface ProductFilter {
 }
 
 export interface ProductFormData {
+  sellerId: string;
   name: string;
-  model: string;
-  category: ProductCategory;
-  brand: string;
-  price: number;
-  originalPrice?: number;
   description: string;
-  specifications: ProductSpecification[];
-  features: string[];
-  images: string[];
-  status: ProductStatus;
+  price: number;
   stock: number;
-  sku: string;
-  warranty: string;
-  origin: string;
-  tags: string[];
-  isFeatured: boolean;
-  isNew: boolean;
-  discount?: number;
+  images: string[];
+  categoryId: string;
+  status: ProductStatus;
 }
 
 // Category display names
@@ -96,8 +73,7 @@ export const CATEGORY_DISPLAY_NAMES: Record<ProductCategory, string> = {
 
 // Status display names
 export const STATUS_DISPLAY_NAMES: Record<ProductStatus, string> = {
-  [ProductStatus.ACTIVE]: 'Đang bán',
-  [ProductStatus.INACTIVE]: 'Tạm ngưng',
-  [ProductStatus.OUT_OF_STOCK]: 'Hết hàng',
-  [ProductStatus.DISCONTINUED]: 'Ngừng sản xuất'
+  [ProductStatus.PENDING]: 'Chờ duyệt',
+  [ProductStatus.APPROVED]: 'Đã duyệt',
+  [ProductStatus.REJECTED]: 'Từ chối'
 };

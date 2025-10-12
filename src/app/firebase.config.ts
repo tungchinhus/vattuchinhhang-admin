@@ -1,13 +1,13 @@
 // Firebase Web App configuration
 // Configured from Firebase Console for project: vattuchinhhang-c5952
 export const firebaseConfig = {
-  apiKey: 'AIzaSyBym3KSL-8CJeyrt9uX7HbAx5cZP-sv3LQ',
-  authDomain: 'vattuchinhhang-c5952.firebaseapp.com',
-  projectId: 'vattuchinhhang-c5952',
-  storageBucket: 'vattuchinhhang-c5952.appspot.com',
-  messagingSenderId: '59321872886',
-  appId: '1:59321872886:web:315452bb95a805cefa395f',
-  measurementId: 'G-W84VY73EVN'
+  apiKey: "AIzaSyBYm3K5L-8CJeyrt9uK7tHbxA5cXP-3LVQ",
+  authDomain: "vattuchinhhang-c5952.firebaseapp.com",
+  projectId: "vattuchinhhang-c5952",
+  storageBucket: "vattuchinhhang-c5952.firebasestorage.app",
+  messagingSenderId: "59321878286",
+  appId: "1:59321878286:web:315452bb95a805cefa395f",
+  measurementId: "G-W04YV73EVN"
 };
 
 

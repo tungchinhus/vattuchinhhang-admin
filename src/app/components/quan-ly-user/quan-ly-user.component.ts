@@ -1,20 +1,41 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-quan-ly-user',
   standalone: true,
-  imports: [
-    CommonModule,
-    MatCardModule,
-    MatIconModule
-  ],
-  templateUrl: './quan-ly-user.component.html',
-  styleUrl: './quan-ly-user.component.css'
+  imports: [CommonModule, RouterModule],
+  template: `
+    <div class="quan-ly-user-container">
+      <h1>Quản lý Người dùng</h1>
+      <p>Chức năng quản lý người dùng đã được chuyển sang trang mới.</p>
+      <a routerLink="/user-management" class="btn btn-primary">
+        Truy cập Quản lý Người dùng
+      </a>
+    </div>
+  `,
+  styles: [`
+    .quan-ly-user-container {
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      margin-top: 20px;
+    }
+    
+    .btn:hover {
+      background-color: #0056b3;
+    }
+  `]
 })
 export class QuanLyUserComponent {
-  title = 'Quản lý người dùng';
-  icon = 'admin_panel_settings';
+  // Component đã được đơn giản hóa
 }

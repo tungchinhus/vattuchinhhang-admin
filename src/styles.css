@@ -192,3 +192,47 @@ input, textarea, select {
   background: #e3f2fd !important;
   color: #1976d2 !important;
 }
+
+/* Modern rounded UI tweaks for inputs/selects/buttons */
+.mat-mdc-form-field {
+  /* Roundness for MDC text fields */
+  --mdc-shape-small: 12px;
+}
+
+.mat-mdc-text-field-wrapper.mdc-text-field--outlined {
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.mdc-notched-outline__leading,
+.mdc-notched-outline__notch,
+.mdc-notched-outline__trailing {
+  border-color: #e5e7eb !important; /* neutral border */
+}
+
+.mat-mdc-form-field.mat-focused .mdc-notched-outline__leading,
+.mat-mdc-form-field.mat-focused .mdc-notched-outline__notch,
+.mat-mdc-form-field.mat-focused .mdc-notched-outline__trailing {
+  border-color: #93c5fd !important; /* light primary on focus */
+}
+
+.mat-mdc-form-field.mat-focused .mat-mdc-text-field-wrapper {
+  box-shadow: 0 0 0 4px rgba(25, 118, 210, 0.10) !important; /* soft focus ring */
+}
+
+.mat-mdc-select-trigger {
+  border-radius: 12px !important;
+}
+
+.mat-mdc-raised-button,
+.mat-mdc-button,
+.mat-mdc-unelevated-button,
+.mat-mdc-outlined-button {
+  border-radius: 12px !important;
+}
+
+/* Table chips/badges subtle polish */
+.status-badge, .stock-badge, .category-badge {
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}

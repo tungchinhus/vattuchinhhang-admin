@@ -324,13 +324,13 @@
               </div>
             </mat-tab>
 
-            <!-- Images Tab -->
+            <!-- Images Tab - Temporarily disabled -->
+            <!--
             <mat-tab label="Hình ảnh">
               <div class="images-section">
                 <h3>Hình ảnh sản phẩm</h3>
                 <p class="section-description">Tải lên hình ảnh sản phẩm (tối đa 5 ảnh)</p>
                 
-                <!-- File Upload -->
                 <div class="upload-area">
                   <input type="file" 
                          #fileInput 
@@ -355,13 +355,11 @@
                   </button>
                 </div>
 
-                <!-- Upload Progress -->
                 <div *ngIf="isUploading()" class="upload-progress">
                   <mat-spinner diameter="30"></mat-spinner>
                   <p>Đang tải lên {{ selectedFiles.length }} ảnh...</p>
                 </div>
 
-                <!-- Image Preview -->
                 <div class="image-preview-grid" *ngIf="uploadedImageUrls.length > 0">
                   <div class="image-preview-item" *ngFor="let imageUrl of uploadedImageUrls; let i = index">
                     <img [src]="imageUrl" [alt]="'Preview ' + (i + 1)">
@@ -374,13 +372,13 @@
                   </div>
                 </div>
 
-                <!-- Empty State -->
                 <div class="empty-state" *ngIf="uploadedImageUrls.length === 0 && !isUploading()">
                   <mat-icon>image</mat-icon>
                   <p>Chưa có ảnh nào được chọn</p>
                 </div>
               </div>
             </mat-tab>
+            -->
 
             <!-- Features Tab -->
             <mat-tab label="Tính năng">
@@ -395,8 +393,11 @@
             <mat-tab label="Hình ảnh">
               <div class="images-section">
                 <h3>Hình ảnh sản phẩm</h3>
-                <p class="section-description">Upload hình ảnh sản phẩm</p>
-                <!-- Image upload will be implemented here -->
+                <p class="section-description">Chức năng upload hình ảnh tạm thời bị vô hiệu hóa</p>
+                <div class="empty-state">
+                  <mat-icon>image</mat-icon>
+                  <p>Chức năng upload hình ảnh sẽ được kích hoạt lại sau</p>
+                </div>
               </div>
             </mat-tab>
           </mat-tab-group>

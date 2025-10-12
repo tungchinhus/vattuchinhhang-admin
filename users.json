@@ -1,0 +1,58 @@
+{"users": [
+{
+  "localId": "0JRc4NtwZTaeABl6Urx9jipwVyn2",
+  "email": "tungchinhus@gmail.com",
+  "emailVerified": true,
+  "displayName": "Chinh Do",
+  "photoUrl": "https://lh3.googleusercontent.com/a/ACg8ocKGEQN2mfhoKkBcfGhIYYO7vWekfl9LiocFjTyeOMZaEyeB9HTF=s96-c",
+  "lastSignedInAt": "1760239018564",
+  "createdAt": "1760186290838",
+  "disabled": false,
+  "providerUserInfo": [
+    {
+      "providerId": "google.com",
+      "rawId": "115826380433473879171",
+      "email": "tungchinhus@gmail.com",
+      "displayName": "Chinh Do",
+      "photoUrl": "https://lh3.googleusercontent.com/a/ACg8ocKGEQN2mfhoKkBcfGhIYYO7vWekfl9LiocFjTyeOMZaEyeB9HTF=s96-c"
+    }
+  ]
+},
+{
+  "localId": "7HD3tRCCqbOZawA4q90ItUqd5Mh1",
+  "lastSignedInAt": "1760236883563",
+  "createdAt": "1760236883563"
+},
+{
+  "localId": "FcT58vJlFxhUuSQR9pxRd48EEuB2",
+  "lastSignedInAt": "1760238666818",
+  "createdAt": "1760238666818"
+},
+{
+  "localId": "NQz7AlC16vPyZBSehgpie2s957C2",
+  "lastSignedInAt": "1760239028720",
+  "createdAt": "1760239028720"
+},
+{
+  "localId": "Vrnlz8Vm5WR875AX2zoHy9rQVew2",
+  "lastSignedInAt": "1760238270120",
+  "createdAt": "1760238270120"
+},
+{
+  "localId": "p7ZrY1Sq3XWNQrZMDMVPXkn08tJ3",
+  "email": "vattuchinhhang1@gmail.com",
+  "emailVerified": true,
+  "displayName": "Chính Hãng Vật Tư",
+  "photoUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ-p6rakbZSUVzibsdwaLeRHj0VpvO5n_ds0g43fyFMgDQ6O8E=s96-c",
+  "lastSignedInAt": "1760186864040",
+  "createdAt": "1760186864040",
+  "providerUserInfo": [
+    {
+      "providerId": "google.com",
+      "rawId": "101998057292802263427",
+      "email": "vattuchinhhang1@gmail.com",
+      "displayName": "Chính Hãng Vật Tư",
+      "photoUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ-p6rakbZSUVzibsdwaLeRHj0VpvO5n_ds0g43fyFMgDQ6O8E=s96-c"
+    }
+  ]
+}]}

@@ -1,7 +1,31 @@
 <div class="dashboard-container">
   <div class="dashboard-header">
-    <h1>Dashboard</h1>
-    <p>Chào mừng bạn đến với hệ thống quản lý Vật Tư Chính Hãng</p>
+    <div class="header-content">
+      <div class="header-text">
+        <h1>Dashboard</h1>
+        <p>Chào mừng {{ getCurrentUser() }} đến với hệ thống quản lý Vật Tư Chính Hãng</p>
+        
+        <!-- User Role Display -->
+        <div class="user-role-info">
+          <mat-chip [color]="getRoleColor()" selected>
+            <mat-icon>{{ isSuperAdmin() ? 'admin_panel_settings' : (isAdmin() ? 'admin_panel_settings' : 'person') }}</mat-icon>
+            {{ getRoleDisplayName() }}
+          </mat-chip>
+          
+          <!-- Super Admin Special Badge -->
+          <mat-chip *ngIf="isSuperAdmin()" color="warn" selected class="super-admin-badge">
+            <mat-icon>star</mat-icon>
+            Quyền cao nhất
+          </mat-chip>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button mat-raised-button color="warn" (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          Đăng xuất
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Stats Cards -->
@@ -61,13 +85,21 @@
             <mat-icon>shopping_cart</mat-icon>
             Tạo đơn hàng
           </button>
-          <button mat-raised-button color="warn" class="action-btn">
+          <button mat-raised-button color="primary" class="action-btn" routerLink="/user-management">
             <mat-icon>people</mat-icon>
-            Quản lý khách hàng
+            Quản lý Người dùng
           </button>
-          <button mat-raised-button class="action-btn">
-            <mat-icon>analytics</mat-icon>
-            Báo cáo
+          <button mat-raised-button color="primary" class="action-btn" routerLink="/user-demo">
+            <mat-icon>info</mat-icon>
+            Demo Người dùng
+          </button>
+          <button mat-raised-button color="primary" class="action-btn" routerLink="/role-management">
+            <mat-icon>admin_panel_settings</mat-icon>
+            Quản lý Vai trò
+          </button>
+          <button mat-raised-button color="accent" class="action-btn" routerLink="/auth-debug">
+            <mat-icon>bug_report</mat-icon>
+            Debug Auth
           </button>
         </div>
       </mat-card-content>

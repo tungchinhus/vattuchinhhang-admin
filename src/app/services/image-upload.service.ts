@@ -5,38 +5,66 @@ import { FIREBASE_STORAGE } from '../firebase.tokens';
 
 @Injectable({ providedIn: 'root' })
 export class ImageUploadService {
-  private readonly storagePath = 'products';
-
   constructor(
     @Inject(FIREBASE_STORAGE) private readonly storage: FirebaseStorage
   ) {}
 
-  async uploadImage(file: File, productId: string, imageIndex: number = 0): Promise<string> {
+  async uploadUserAvatar(file: File, userId: string): Promise<string> {
     const timestamp = Date.now();
-    const fileName = `${productId}_${imageIndex}_${timestamp}.${file.name.split('.').pop()}`;
-    const imageRef = ref(this.storage, `${this.storagePath}/${fileName}`);
+    const fileName = `profile_${timestamp}.${file.name.split('.').pop()}`;
+    const imageRef = ref(this.storage, `users/avatars/${userId}/${fileName}`);
     
     try {
       const snapshot = await uploadBytes(imageRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
       return downloadURL;
     } catch (error) {
-      console.error('Error uploading image:', error);
-      throw new Error('Không thể upload ảnh. Vui lòng thử lại!');
+      console.error('Error uploading user avatar:', error);
+      throw new Error('Không thể upload ảnh đại diện. Vui lòng thử lại!');
     }
   }
 
-  async uploadMultipleImages(files: File[], productId: string): Promise<string[]> {
+  async uploadProductImage(file: File, productId: string, imageIndex: number = 0): Promise<string> {
+    const timestamp = Date.now();
+    const fileName = `image_${imageIndex}_${timestamp}.${file.name.split('.').pop()}`;
+    const imageRef = ref(this.storage, `products/${productId}/${fileName}`);
+    
+    try {
+      const snapshot = await uploadBytes(imageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      return downloadURL;
+    } catch (error) {
+      console.error('Error uploading product image:', error);
+      throw new Error('Không thể upload ảnh sản phẩm. Vui lòng thử lại!');
+    }
+  }
+
+  async uploadMultipleProductImages(files: File[], productId: string): Promise<string[]> {
     const uploadPromises = files.map((file, index) => 
-      this.uploadImage(file, productId, index)
+      this.uploadProductImage(file, productId, index)
     );
     
     try {
       const urls = await Promise.all(uploadPromises);
       return urls;
     } catch (error) {
-      console.error('Error uploading multiple images:', error);
-      throw new Error('Không thể upload một số ảnh. Vui lòng thử lại!');
+      console.error('Error uploading multiple product images:', error);
+      throw new Error('Không thể upload một số ảnh sản phẩm. Vui lòng thử lại!');
+    }
+  }
+
+  async uploadCategoryIcon(file: File, categoryId: string): Promise<string> {
+    const timestamp = Date.now();
+    const fileName = `icon_${timestamp}.${file.name.split('.').pop()}`;
+    const imageRef = ref(this.storage, `categories/${categoryId}/${fileName}`);
+    
+    try {
+      const snapshot = await uploadBytes(imageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      return downloadURL;
+    } catch (error) {
+      console.error('Error uploading category icon:', error);
+      throw new Error('Không thể upload icon danh mục. Vui lòng thử lại!');
     }
   }
 
