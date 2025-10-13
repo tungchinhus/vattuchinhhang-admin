@@ -1,299 +1,111 @@
-import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ProductFormData, ProductStatus, STATUS_DISPLAY_NAMES } from '../../models/product.model';
-import { Category } from '../../models/category.model';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatSelectModule } from '@angular/material/select';
+import { ProductService } from '../../services/product.service';
+import { ProductStatus } from '../../models/product.model';
 
 @Component({
   selector: 'app-product-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule],
   template: `
-    <form (ngSubmit)="onSubmit()" #productForm="ngForm" class="product-form">
-      <div class="form-group">
-        <label for="name">Tên sản phẩm *</label>
-        <input 
-          type="text" 
-          id="name" 
-          name="name" 
-          [(ngModel)]="formData.name" 
-          required 
-          class="form-control"
-          placeholder="Nhập tên sản phẩm">
+  <div class="p-4">
+    <h2>Thêm sản phẩm</h2>
+    <div class="form-grid" style="display:grid; grid-template-columns: repeat(2, 1fr); gap:12px;">
+      <mat-form-field appearance="outline">
+        <mat-label>Supplier ID</mat-label>
+        <input matInput [(ngModel)]="supplierId" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Tên</mat-label>
+        <input matInput [(ngModel)]="name" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Slug</mat-label>
+        <input matInput [(ngModel)]="slug" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Giá</mat-label>
+        <input matInput type="number" [(ngModel)]="price" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full-row" style="grid-column: 1 / -1;">
+        <mat-label>Mô tả ngắn</mat-label>
+        <textarea matInput rows="2" [(ngModel)]="shortDescription"></textarea>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full-row" style="grid-column: 1 / -1;">
+        <mat-label>Mô tả chi tiết</mat-label>
+        <textarea matInput rows="4" [(ngModel)]="fullDescription"></textarea>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Category ID</mat-label>
+        <input matInput [(ngModel)]="category" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Tồn kho</mat-label>
+        <input matInput type="number" [(ngModel)]="stock" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Trạng thái</mat-label>
+        <mat-select [(ngModel)]="status">
+          <mat-option value="pending">pending</mat-option>
+          <mat-option value="approved">approved</mat-option>
+          <mat-option value="rejected">rejected</mat-option>
+          <mat-option value="hidden">hidden</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full-row" style="grid-column: 1 / -1;">
+        <mat-label>Specs (JSON)</mat-label>
+        <textarea matInput rows="6" [(ngModel)]="specsJson" placeholder='{"numCores":11,"technology":"Smax Pro V"}'></textarea>
+      </mat-form-field>
+      <div class="full-row" style="grid-column: 1 / -1; display:flex; gap:8px;">
+        <button mat-raised-button color="primary" (click)="save()">Lưu</button>
       </div>
-
-      <div class="form-group">
-        <label for="description">Mô tả *</label>
-        <textarea 
-          id="description" 
-          name="description" 
-          [(ngModel)]="formData.description" 
-          required 
-          rows="4"
-          class="form-control"
-          placeholder="Nhập mô tả sản phẩm"></textarea>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="price">Giá *</label>
-          <input 
-            type="number" 
-            id="price" 
-            name="price" 
-            [(ngModel)]="formData.price" 
-            required 
-            min="0"
-            step="1000"
-            class="form-control"
-            placeholder="Nhập giá sản phẩm">
-        </div>
-
-        <div class="form-group">
-          <label for="stock">Số lượng tồn kho *</label>
-          <input 
-            type="number" 
-            id="stock" 
-            name="stock" 
-            [(ngModel)]="formData.stock" 
-            required 
-            min="0"
-            class="form-control"
-            placeholder="Nhập số lượng">
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="categoryId">Danh mục *</label>
-        <select 
-          id="categoryId" 
-          name="categoryId" 
-          [(ngModel)]="formData.categoryId" 
-          required 
-          class="form-control">
-          <option value="">Chọn danh mục</option>
-          <option *ngFor="let category of categories" [value]="category.id">
-            {{ category.name }}
-          </option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="status">Trạng thái *</label>
-        <select 
-          id="status" 
-          name="status" 
-          [(ngModel)]="formData.status" 
-          required 
-          class="form-control">
-          <option *ngFor="let status of productStatuses" [value]="status">
-            {{ STATUS_DISPLAY_NAMES[status] }}
-          </option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="images">Hình ảnh sản phẩm</label>
-        <input 
-          type="file" 
-          id="images" 
-          name="images" 
-          (change)="onImagesChange($event)"
-          accept="image/*"
-          multiple
-          class="form-control">
-        <div *ngIf="formData.images.length > 0" class="images-preview">
-          <div *ngFor="let image of formData.images; let i = index" class="image-item">
-            <img [src]="image" alt="Product image" class="preview-image">
-            <button type="button" (click)="removeImage(i)" class="remove-btn">×</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="form-actions">
-        <button type="button" (click)="onCancel()" class="btn btn-secondary">
-          Hủy
-        </button>
-        <button type="submit" [disabled]="!productForm.form.valid || isLoading" class="btn btn-primary">
-          {{ isLoading ? 'Đang lưu...' : 'Lưu' }}
-        </button>
-      </div>
-    </form>
+    </div>
+  </div>
   `,
-  styles: [`
-    .product-form {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-    }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: 500;
-      color: #333;
-    }
-
-    .form-control {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px;
-    }
-
-    .form-control:focus {
-      outline: none;
-      border-color: #007bff;
-      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-    }
-
-    textarea.form-control {
-      resize: vertical;
-    }
-
-    .images-preview {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    .image-item {
-      position: relative;
-    }
-
-    .preview-image {
-      width: 100px;
-      height: 100px;
-      object-fit: cover;
-      border-radius: 4px;
-      border: 2px solid #ddd;
-    }
-
-    .remove-btn {
-      position: absolute;
-      top: -5px;
-      right: -5px;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background-color: #dc3545;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .remove-btn:hover {
-      background-color: #c82333;
-    }
-
-    .form-actions {
-      display: flex;
-      gap: 10px;
-      justify-content: flex-end;
-      margin-top: 30px;
-    }
-
-    .btn {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background-color 0.3s;
-    }
-
-    .btn-primary {
-      background-color: #007bff;
-      color: white;
-    }
-
-    .btn-primary:hover:not(:disabled) {
-      background-color: #0056b3;
-    }
-
-    .btn-primary:disabled {
-      background-color: #6c757d;
-      cursor: not-allowed;
-    }
-
-    .btn-secondary {
-      background-color: #6c757d;
-      color: white;
-    }
-
-    .btn-secondary:hover {
-      background-color: #545b62;
-    }
-  `]
 })
-export class ProductFormComponent implements OnInit {
-  @Input() initialData: Partial<ProductFormData> = {};
-  @Input() categories: Category[] = [];
-  @Input() isLoading = false;
-  @Output() formSubmit = new EventEmitter<ProductFormData>();
-  @Output() formCancel = new EventEmitter<void>();
+export class ProductFormComponent {
+  supplierId = '';
+  name = '';
+  slug = '';
+  shortDescription = '';
+  fullDescription = '';
+  price = 0;
+  images: string[] = [];
+  category = '';
+  stock = 0;
+  status: ProductStatus = 'pending';
+  specsJson = '';
 
-  formData: ProductFormData = {
-    sellerId: '',
-    name: '',
-    description: '',
-    price: 0,
-    stock: 0,
-    images: [],
-    categoryId: '',
-    status: ProductStatus.PENDING
-  };
+  constructor(private productService: ProductService) {}
 
-  productStatuses = Object.values(ProductStatus);
-  STATUS_DISPLAY_NAMES = STATUS_DISPLAY_NAMES;
-
-  ngOnInit() {
-    if (this.initialData) {
-      this.formData = { ...this.formData, ...this.initialData };
+  async save(): Promise<void> {
+    try {
+      const specs = this.specsJson ? JSON.parse(this.specsJson) : undefined;
+      const id = await this.productService.createProduct(this.supplierId, {
+        supplierId: this.supplierId,
+        name: this.name,
+        slug: this.slug,
+        shortDescription: this.shortDescription,
+        fullDescription: this.fullDescription,
+        price: this.price,
+        images: this.images,
+        category: this.category,
+        specs,
+        stock: this.stock,
+        status: this.status,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as any);
+      console.log('Created product id', id);
+    } catch (e) {
+      console.error(e);
     }
-  }
-
-  onImagesChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.files) {
-      const files = Array.from(input.files);
-      files.forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          this.formData.images.push(e.target?.result as string);
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-  }
-
-  removeImage(index: number) {
-    this.formData.images.splice(index, 1);
-  }
-
-  onSubmit() {
-    if (this.formData.name && this.formData.description && this.formData.price > 0 && this.formData.categoryId) {
-      this.formSubmit.emit(this.formData);
-    }
-  }
-
-  onCancel() {
-    this.formCancel.emit();
   }
 }
+
+

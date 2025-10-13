@@ -70,12 +70,42 @@
   margin-bottom: 2rem;
 }
 
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.logo-icon {
+  font-size: 2.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: #667eea;
+}
+
+.logo-text {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+
 .login-title {
   font-size: 1.5rem;
   font-weight: 600;
   color: #333;
   margin: 0 0 0.5rem 0;
-  font-family: 'Inter', 'Noto Sans', sans-serif;
+}
+
+.login-subtitle {
+  color: #666;
+  font-size: 0.875rem;
+  margin: 0;
 }
 
 .login-form {
@@ -119,10 +149,6 @@
   justify-content: center;
   gap: 0.5rem;
   transition: all 0.3s ease;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  font-family: 'Inter', 'Noto Sans', sans-serif;
 }
 
 .login-button:hover {
@@ -130,158 +156,88 @@
   box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
 }
 
-/* Button disabled state */
-.login-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-/* Form invalid state */
-.login-form.ng-invalid .login-button {
-  background-color: #f44336 !important;
-  color: white !important;
-  border-color: #f44336 !important;
-}
-
-.login-form.ng-invalid .login-button:hover {
-  background-color: #d32f2f !important;
-}
-
 .button-spinner {
   margin-right: 0.5rem;
 }
 
-/* Google Sign-In Section */
-.google-signin-section {
+.demo-accounts {
   margin-top: 1.5rem;
 }
 
-.divider-text {
-  background: rgba(255, 255, 255, 0.95);
-  padding: 0 1rem;
-  color: #666;
-  font-size: 0.875rem;
-  font-family: 'Inter', 'Noto Sans', sans-serif;
-}
-
-.google-signin-button {
-  width: 100%;
-  height: 48px;
-  font-size: 1rem;
-  font-weight: 500;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  transition: all 0.3s ease;
-  background: white;
-  border: 2px solid #e0e0e0;
-  color: #333;
-  font-family: 'Inter', 'Noto Sans', sans-serif;
+.demo-header {
+  text-align: center;
   margin-bottom: 1rem;
 }
 
-.google-signin-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  border-color: #4285f4;
+.demo-header h4 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
-.google-signin-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+.demo-header p {
+  margin: 0;
+  color: #666;
+  font-size: 0.875rem;
 }
 
-.google-logo {
-  width: 20px;
-  height: 20px;
+.demo-buttons {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
 }
 
-.super-admin-info {
+.demo-button {
+  flex: 1;
+  min-width: 100px;
+  height: 40px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.75rem;
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-  color: white;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  font-family: 'Inter', 'Noto Sans', sans-serif;
-  margin-top: 0.5rem;
-}
-
-.super-admin-info mat-icon {
-  font-size: 18px;
-  width: 18px;
-  height: 18px;
-}
-
-/* Quick Login Section */
-.quick-login-section {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-  padding: 20px;
-  border-radius: 8px;
-  margin: 20px 0;
-  text-align: center;
-}
-
-.quick-login-section h5 {
-  color: white;
-  margin: 0 0 15px 0;
-  font-size: 1.1em;
-  font-weight: 600;
-}
-
-.quick-login-button {
-  width: 100%;
-  height: 50px;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
   transition: all 0.3s ease;
-  background: white;
-  color: #ff6b6b;
-  border: 2px solid white;
-  margin-bottom: 10px;
 }
 
-.quick-login-button:hover {
-  background: #f8f9fa;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+.demo-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.quick-login-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+.demo-button.admin {
+  color: #dc3545;
+  border-color: #dc3545;
 }
 
-.quick-login-button mat-icon {
-  font-size: 20px;
-  width: 20px;
-  height: 20px;
+.demo-button.manager {
+  color: #fd7e14;
+  border-color: #fd7e14;
 }
 
-.quick-login-note {
-  color: white;
-  font-size: 0.9em;
-  margin: 0;
-  opacity: 0.9;
+.demo-button.user {
+  color: #198754;
+  border-color: #198754;
 }
 
+.demo-credentials {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.credential-item {
+  margin-bottom: 0.25rem;
+}
+
+.credential-item:last-child {
+  margin-bottom: 0;
+}
 
 /* Form field styling */
 mat-form-field {
@@ -298,57 +254,10 @@ mat-form-field.mat-form-field-appearance-outline.mat-focused .mat-form-field-out
 
 mat-form-field.mat-form-field-appearance-outline .mat-form-field-label {
   color: #666;
-  font-family: 'Inter', 'Noto Sans', sans-serif;
 }
 
 mat-form-field.mat-form-field-appearance-outline.mat-focused .mat-form-field-label {
   color: #667eea;
-}
-
-/* Error states */
-mat-form-field.mat-form-field-invalid .mat-form-field-outline {
-  color: #f44336 !important;
-}
-
-mat-form-field.mat-form-field-invalid .mat-form-field-outline-thick {
-  color: #f44336 !important;
-}
-
-mat-form-field.mat-form-field-invalid .mat-form-field-label {
-  color: #f44336 !important;
-}
-
-mat-form-field.mat-form-field-invalid.mat-focused .mat-form-field-outline-thick {
-  color: #f44336 !important;
-}
-
-mat-form-field.mat-form-field-invalid.mat-focused .mat-form-field-label {
-  color: #f44336 !important;
-}
-
-/* Error text styling */
-.mat-mdc-form-field-error {
-  color: #f44336 !important;
-  font-size: 0.75rem;
-  margin-top: 0.25rem;
-}
-
-/* Required field indicator */
-mat-form-field .mat-mdc-form-field-label::after {
-  content: ' *';
-  color: #f44336;
-  font-weight: bold;
-}
-
-/* Error animation */
-mat-form-field.mat-form-field-invalid {
-  animation: shake 0.5s ease-in-out;
-}
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
 }
 
 /* Button styling */
@@ -364,7 +273,6 @@ mat-icon-button:hover {
 mat-checkbox .mat-checkbox-label {
   font-size: 0.875rem;
   color: #666;
-  font-family: 'Inter', 'Noto Sans', sans-serif;
 }
 
 /* Divider styling */
@@ -404,6 +312,15 @@ mat-divider {
   .login-card {
     padding: 1rem;
   }
+  
+  .logo {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .logo-text {
+    font-size: 1.5rem;
+  }
 }
 
 /* Loading state */
@@ -423,61 +340,23 @@ mat-divider {
   color: #721c24;
 }
 
-::ng-deep .info-snackbar {
-  background-color: #d1ecf1;
-  color: #0c5460;
-}
-
-/* Demo section */
-.demo-section {
-  margin-top: 1.5rem;
-  text-align: center;
-}
-
-.demo-header {
-  text-align: center;
-  margin-bottom: 1rem;
-}
-
-.demo-header h4 {
-  margin: 0 0 0.5rem 0;
-  color: #333;
-  font-size: 1rem;
-  font-weight: 600;
-  font-family: 'Inter', 'Noto Sans', sans-serif;
-}
-
-.demo-header p {
-  margin: 0;
-  color: #666;
-  font-size: 0.875rem;
-  font-family: 'Inter', 'Noto Sans', sans-serif;
-}
-
-.demo-buttons {
-  display: flex;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-}
-
+/* Animation for demo buttons */
 .demo-button {
-  flex: 1;
-  min-width: 100px;
-  height: 40px;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  transition: all 0.3s ease;
-  font-family: 'Inter', 'Noto Sans', sans-serif;
+  animation: fadeInUp 0.6s ease-out;
+  animation-fill-mode: both;
 }
 
-.demo-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
+.demo-button:nth-child(1) { animation-delay: 0.1s; }
+.demo-button:nth-child(2) { animation-delay: 0.2s; }
+.demo-button:nth-child(3) { animation-delay: 0.3s; }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -53,12 +53,8 @@ export class DangNhapComponent implements OnInit {
 
   ngOnInit(): void {
     // Check if user is already logged in
-    console.log('Login component: Checking authentication state');
     if (this.authService.isAuthenticated()) {
-      console.log('Login component: User is authenticated, redirecting to dashboard');
-      this.router.navigate(['/dashboard']);
-    } else {
-      console.log('Login component: User is not authenticated, staying on login page');
+      this.router.navigate(['/quan-ly-san-pham']);
     }
   }
 
@@ -67,121 +63,47 @@ export class DangNhapComponent implements OnInit {
       this.isLoading = true;
       const { username, password, rememberMe } = this.loginForm.value;
       
-      this.authService.login(username, password).subscribe({
-        next: (success: boolean) => {
-          this.isLoading = false;
-          
-          if (success) {
-            this.snackBar.open('Đăng nhập thành công!', 'Đóng', {
-              duration: 3000,
-              horizontalPosition: 'right',
-              verticalPosition: 'top',
-              panelClass: ['success-snackbar']
-            });
-            
-            // Store remember me preference
-            if (rememberMe) {
-              localStorage.setItem('rememberMe', 'true');
-            } else {
-              localStorage.removeItem('rememberMe');
-            }
-            
-            // Redirect to main page
-            this.router.navigate(['/dashboard']);
-          } else {
-            this.snackBar.open('Tên đăng nhập hoặc mật khẩu không đúng', 'Đóng', {
-              duration: 5000,
-              horizontalPosition: 'right',
-              verticalPosition: 'top',
-              panelClass: ['error-snackbar']
-            });
-          }
-        },
-        error: (error: any) => {
-          this.isLoading = false;
-          console.error('Login error:', error);
-          this.snackBar.open('Có lỗi xảy ra khi đăng nhập', 'Đóng', {
-            duration: 5000,
-            horizontalPosition: 'right',
-            verticalPosition: 'top',
-            panelClass: ['error-snackbar']
-          });
-        }
-      });
-    } else {
-      this.markFormGroupTouched();
-    }
-  }
-
-  onGoogleSignIn(): void {
-    this.isLoading = true;
-    
-    // Try popup first, fallback to redirect if it fails
-    this.authService.loginWithGoogle().subscribe({
-      next: (success: boolean) => {
+      this.authService.login(username, password).then(result => {
         this.isLoading = false;
         
-        if (success) {
-          const currentUser = this.authService.getCurrentUser();
-          let message = 'Đăng nhập Google thành công!';
-          
-          if (currentUser?.email === 'tungchinhus@gmail.com') {
-            message = 'Chào mừng Siêu quản trị viên! Bạn có quyền cao nhất trong hệ thống.';
-          }
-          
-          this.snackBar.open(message, 'Đóng', {
-            duration: 4000,
+        if (result.success) {
+          this.snackBar.open(result.message, 'Đóng', {
+            duration: 3000,
             horizontalPosition: 'right',
             verticalPosition: 'top',
             panelClass: ['success-snackbar']
           });
           
+          // Store remember me preference
+          if (rememberMe) {
+            localStorage.setItem('rememberMe', 'true');
+          } else {
+            localStorage.removeItem('rememberMe');
+          }
+          
           // Redirect to main page
-          this.router.navigate(['/dashboard']);
+          this.router.navigate(['/quan-ly-san-pham']);
         } else {
-          // Popup failed, try redirect method
-          console.log('Popup failed, trying redirect method...');
-          this.authService.loginWithGoogleRedirect();
-        }
-      },
-      error: (error: any) => {
-        this.isLoading = false;
-        console.error('Google Sign-In error:', error);
-        
-        // If popup fails due to COOP or other issues, try redirect
-        if (error.message && error.message.includes('Cross-Origin-Opener-Policy')) {
-          console.log('COOP error detected, trying redirect method...');
-          this.authService.loginWithGoogleRedirect();
-        } else {
-          this.snackBar.open('Có lỗi xảy ra khi đăng nhập Google', 'Đóng', {
+          this.snackBar.open(result.message, 'Đóng', {
             duration: 5000,
             horizontalPosition: 'right',
             verticalPosition: 'top',
             panelClass: ['error-snackbar']
           });
         }
-      }
-    });
-  }
-
-  quickLoginSuperAdmin(): void {
-    this.isLoading = true;
-    
-    // Pre-fill the form with super admin email
-    this.loginForm.patchValue({
-      username: 'tungchinhus@gmail.com',
-      password: 'superadmin123' // This won't work with Google Auth, just for demo
-    });
-    
-    // Show instruction message
-    this.snackBar.open('Vui lòng sử dụng nút "Đăng nhập bằng Google" với tài khoản tungchinhus@gmail.com', 'Đóng', {
-      duration: 5000,
-      horizontalPosition: 'right',
-      verticalPosition: 'top',
-      panelClass: ['info-snackbar']
-    });
-    
-    this.isLoading = false;
+      }).catch(error => {
+        this.isLoading = false;
+        console.error('Login error:', error);
+        this.snackBar.open('Có lỗi xảy ra khi đăng nhập', 'Đóng', {
+          duration: 5000,
+          horizontalPosition: 'right',
+          verticalPosition: 'top',
+          panelClass: ['error-snackbar']
+        });
+      });
+    } else {
+      this.markFormGroupTouched();
+    }
   }
 
   togglePasswordVisibility(): void {
@@ -196,12 +118,6 @@ export class DangNhapComponent implements OnInit {
     if (field?.hasError('minlength')) {
       const requiredLength = field.errors?.['minlength'].requiredLength;
       return `Tối thiểu ${requiredLength} ký tự`;
-    }
-    if (field?.hasError('email')) {
-      return 'Email không hợp lệ';
-    }
-    if (field?.hasError('pattern')) {
-      return 'Định dạng không đúng';
     }
     return '';
   }
@@ -223,44 +139,5 @@ export class DangNhapComponent implements OnInit {
     
     const account = accounts[accountType];
     this.loginForm.patchValue(account);
-  }
-
-  // Test validation
-  testValidation(): void {
-    this.loginForm.patchValue({
-      username: '',
-      password: '12'
-    });
-    this.markFormGroupTouched();
-  }
-
-  // Clear form
-  clearForm(): void {
-    this.loginForm.reset();
-    this.loginForm.patchValue({
-      rememberMe: false
-    });
-  }
-
-  // Test logout functionality
-  testLogout(): void {
-    console.log('Testing logout functionality...');
-    this.authService.logout();
-  }
-
-  // Test authentication state
-  testAuthState(): void {
-    console.log('Current auth state:', this.authService.isAuthenticated());
-    console.log('Current user:', this.authService.getCurrentUser());
-    console.log('=== AUTH DEBUG ===');
-    console.log('Firebase currentUser:', this.authService.getCurrentUser());
-    console.log('isAuthenticated():', this.authService.isAuthenticated());
-    console.log('==================');
-  }
-
-  // Force clear authentication for testing
-  forceClearAuth(): void {
-    console.log('Force clearing authentication state...');
-    this.authService.forceClearAuth();
   }
 }

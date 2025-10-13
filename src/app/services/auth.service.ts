@@ -1,73 +1,46 @@
-import { Injectable, Inject } from '@angular/core';
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { take } from 'rxjs/operators';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { 
-  signInWithEmailAndPassword, 
-  signOut, 
-  onAuthStateChanged, 
-  signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
-  GoogleAuthProvider,
-  type Auth, 
-  type User as FirebaseUser 
-} from 'firebase/auth';
-import { FIREBASE_AUTH } from '../firebase.tokens';
-import { UsersService } from './users.service';
-import { RolesService } from './roles.service';
-import { UserRole } from '../models/user.model';
-
-export interface AuthUser {
-  id: string;
-  email: string;
-  fullName: string;
-  role: UserRole;
-  avatarUrl?: string;
-}
+import { User } from '../models/user.model';
+import { UserManagementFirebaseService } from './user-management-firebase.service';
+import { FirebaseService } from './firebase.service';
+import { signInWithEmailAndPassword, onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
+import { reauthenticateWithCredential, EmailAuthProvider, updatePassword } from 'firebase/auth';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private currentUserSubject = new BehaviorSubject<AuthUser | null>(null);
+  private readonly SUPER_ADMIN_EMAILS: string[] = [
+    'tungchinhus@gmail.com'
+  ];
+  private currentUserSubject = new BehaviorSubject<User | null>(null);
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
-  private authStateInitialized = false; // Prevent multiple initializations
+  private tokenSubject = new BehaviorSubject<string | null>(null);
 
   public currentUser$ = this.currentUserSubject.asObservable();
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
-
-  // Dynamic role management - no hardcoded emails
+  public token$ = this.tokenSubject.asObservable();
 
   constructor(
-    @Inject(FIREBASE_AUTH) private readonly auth: Auth, 
+    private userManagementService: UserManagementFirebaseService,
     private router: Router,
-    @Inject(UsersService) private usersService: UsersService,
-    @Inject(RolesService) private rolesService: RolesService
+    private firebaseService: FirebaseService
   ) {
     this.initializeAuth();
-    this.handleRedirectResult();
   }
 
-  private async initializeAuth(): Promise<void> {
-    if (this.authStateInitialized) {
-      console.log('AuthService: Auth already initialized, skipping');
-      return;
-    }
-
-    console.log('AuthService: Initializing authentication...');
-    
-    // Load from storage for initial paint
+  private initializeAuth(): void {
+    // Load from storage for initial paint (will be reconciled by onAuthStateChanged)
     const storedUser = localStorage.getItem('currentUser');
-    if (storedUser) {
+    const storedToken = localStorage.getItem('authToken');
+    if (storedUser && storedToken) {
       try {
         const user = JSON.parse(storedUser);
-        // Ensure role is properly typed as UserRole enum
-        if (user.role && typeof user.role === 'string') {
-          user.role = user.role as UserRole;
-        }
         this.currentUserSubject.next(user);
         this.isAuthenticatedSubject.next(true);
-        console.log('AuthService: Loaded user from storage:', user);
+        this.tokenSubject.next(storedToken);
       } catch (error) {
         console.error('Error parsing stored user data:', error);
         this.clearAuthData();
@@ -75,370 +48,368 @@ export class AuthService {
     }
 
     // Subscribe Firebase auth state
-    onAuthStateChanged(this.auth, async (fbUser: FirebaseUser | null) => {
-      console.log('AuthService: Auth state changed, user:', fbUser);
+    onAuthStateChanged(this.firebaseService.getAuth(), async (fbUser: FirebaseUser | null) => {
       if (fbUser) {
-        // Use enhanced authentication with role preservation
-        await this.handleUserAuthenticationWithRolePreservation(fbUser);
+        try {
+          const token = await fbUser.getIdToken();
+          this.tokenSubject.next(token);
+          this.isAuthenticatedSubject.next(true);
+
+          // Try to map Firebase user to app user by email
+          const users = await this.userManagementService.getUsers().pipe(take(1)).toPromise();
+          const matchedUser = (users || []).find(u => u.email?.toLowerCase() === (fbUser.email || '').toLowerCase() || u.username?.toLowerCase() === (fbUser.email || '').toLowerCase());
+
+          if (matchedUser) {
+            this.currentUserSubject.next(matchedUser);
+            localStorage.setItem('currentUser', JSON.stringify(matchedUser));
+            localStorage.setItem('authToken', token);
+          } else {
+            // Check if we have a stored user with roles - preserve them
+            const storedUser = localStorage.getItem('currentUser');
+            if (storedUser) {
+              try {
+                const parsedStoredUser = JSON.parse(storedUser);
+                // Only create minimal user if stored user doesn't have roles or is different user
+                if (parsedStoredUser.email?.toLowerCase() !== (fbUser.email || '').toLowerCase() || 
+                    !parsedStoredUser.roles || parsedStoredUser.roles.length === 0) {
+                  // Minimal fallback mapping if no profile found
+                  const minimalUser: User = {
+                    id: fbUser.uid,
+                    username: fbUser.email || fbUser.uid,
+                    email: fbUser.email || '',
+                    fullName: fbUser.displayName || (fbUser.email || ''),
+                    isActive: true,
+                    roles: [],
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                  };
+                  this.currentUserSubject.next(minimalUser);
+                  localStorage.setItem('currentUser', JSON.stringify(minimalUser));
+                  localStorage.setItem('authToken', token);
+                } else {
+                  // Keep the stored user with roles, just update token
+                  localStorage.setItem('authToken', token);
+                }
+              } catch (parseError) {
+                console.error('Error parsing stored user:', parseError);
+                // Minimal fallback mapping if no profile found
+                const minimalUser: User = {
+                  id: fbUser.uid,
+                  username: fbUser.email || fbUser.uid,
+                  email: fbUser.email || '',
+                  fullName: fbUser.displayName || (fbUser.email || ''),
+                  isActive: true,
+                  roles: [],
+                  createdAt: new Date(),
+                  updatedAt: new Date()
+                };
+                this.currentUserSubject.next(minimalUser);
+                localStorage.setItem('currentUser', JSON.stringify(minimalUser));
+                localStorage.setItem('authToken', token);
+              }
+            } else {
+              // Minimal fallback mapping if no profile found
+              const minimalUser: User = {
+                id: fbUser.uid,
+                username: fbUser.email || fbUser.uid,
+                email: fbUser.email || '',
+                fullName: fbUser.displayName || (fbUser.email || ''),
+                isActive: true,
+                roles: [],
+                createdAt: new Date(),
+                updatedAt: new Date()
+              };
+              this.currentUserSubject.next(minimalUser);
+              localStorage.setItem('currentUser', JSON.stringify(minimalUser));
+              localStorage.setItem('authToken', token);
+            }
+          }
+        } catch (err) {
+          console.error('Error handling auth state change:', err);
+          this.clearAuthData();
+        }
       } else {
         this.clearAuthData();
-        console.log('AuthService: User not authenticated');
       }
     });
-
-    this.authStateInitialized = true;
   }
 
-  private async handleUserAuthentication(fbUser: FirebaseUser): Promise<void> {
-    console.log('AuthService: handleUserAuthentication called for:', fbUser.email);
-    
-    // Always use dynamic role - no exceptions
-    const authUser = await this.forcePreserveRole(fbUser);
-
-    this.currentUserSubject.next(authUser);
-    this.isAuthenticatedSubject.next(true);
-    localStorage.setItem('currentUser', JSON.stringify(authUser));
-    console.log('AuthService: User authenticated with dynamic role:', authUser);
-  }
-
-  // Enhanced method to preserve role during reload
-  private async handleUserAuthenticationWithRolePreservation(fbUser: FirebaseUser): Promise<void> {
-    console.log('AuthService: handleUserAuthenticationWithRolePreservation called for:', fbUser.email);
-    
-    // Check if we already have a user with role in localStorage
-    const storedUser = localStorage.getItem('currentUser');
-    let authUser: AuthUser;
-    
-    if (storedUser && fbUser.email) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        // If stored user has same email and a valid role, preserve it
-        if (parsedUser.email === fbUser.email && parsedUser.role && parsedUser.role !== UserRole.CUSTOMER) {
-          console.log('AuthService: Preserving role from localStorage:', parsedUser.role);
-          authUser = {
-            id: fbUser.uid,
-            email: fbUser.email,
-            fullName: fbUser.displayName || fbUser.email || 'User',
-            role: parsedUser.role,
-            avatarUrl: fbUser.photoURL || ''
-          };
-        } else {
-          // Try to get dynamic role, fallback to stored role
-          authUser = await this.forcePreserveRole(fbUser);
-        }
-      } catch (error) {
-        console.log('AuthService: Error parsing stored user, getting dynamic role');
-        authUser = await this.forcePreserveRole(fbUser);
-      }
-    } else {
-      // No stored user, get dynamic role
-      authUser = await this.forcePreserveRole(fbUser);
-    }
-    
-    this.currentUserSubject.next(authUser);
-    this.isAuthenticatedSubject.next(true);
-    localStorage.setItem('currentUser', JSON.stringify(authUser));
-    console.log('AuthService: User authenticated with preserved role:', authUser);
-  }
-
-  private async getUserRole(email: string): Promise<UserRole> {
+  async login(usernameOrEmail: string, password: string): Promise<{ success: boolean; message: string; user?: User }> {
     try {
-      // First check Firebase Custom Claims
-      const fbUser = this.auth.currentUser;
-      if (fbUser) {
-        const tokenResult = await fbUser.getIdTokenResult();
-        const customClaims = tokenResult.claims;
-        
-        if (customClaims['role']) {
-          console.log('AuthService: Found role in custom claims:', customClaims['role']);
-          return customClaims['role'] as UserRole;
-        }
-      }
-      
-      // Hardcoded super admin for now (temporary solution)
-      if (email === 'tungchinhus@gmail.com') {
-        console.log('AuthService: Using hardcoded super admin role for:', email);
-        return UserRole.SUPER_ADMIN;
-      }
-      
-      // Second: Check RolesService for dynamic role assignments
-      try {
-        const dynamicRole = await this.rolesService.getUserRoleByEmail(email);
-        if (dynamicRole) {
-          console.log('AuthService: Found role in RolesService:', dynamicRole);
-          return dynamicRole;
-        }
-      } catch (error) {
-        console.log('AuthService: RolesService error, continuing with fallback:', error);
-      }
-      
-      // Third: Check Firestore for user role (fallback)
-      try {
-        const userDoc = await this.usersService.getUserByEmail(email);
-        if (userDoc && userDoc.role) {
-          console.log('AuthService: Found role in Firestore:', userDoc.role);
-          return userDoc.role;
-        }
-      } catch (error) {
-        console.log('AuthService: UsersService error, continuing with fallback:', error);
-      }
-      
-      // Check localStorage as last resort before defaulting to CUSTOMER
-      const storedUser = localStorage.getItem('currentUser');
-      if (storedUser) {
+      // Allow login by username OR email
+      const input = (usernameOrEmail || '').trim();
+
+      let signInEmail = input;
+      if (!input.includes('@')) {
+        // Treat as username → find corresponding email from user directory
         try {
-          const parsedUser = JSON.parse(storedUser);
-          if (parsedUser.email === email && parsedUser.role && parsedUser.role !== UserRole.CUSTOMER) {
-            console.log('AuthService: Using stored role as fallback:', parsedUser.role);
-            return parsedUser.role;
+          const users = await this.userManagementService.getUsers().pipe(take(1)).toPromise() || [];
+          const matchedByUsername = users.find(u => (u.username || '').toLowerCase().trim() === input.toLowerCase());
+          if (matchedByUsername?.email) {
+            signInEmail = matchedByUsername.email;
           }
-        } catch (error) {
-          console.log('AuthService: Error parsing stored user for role fallback');
+        } catch (userLookupError) {
+          console.warn('Could not lookup user by username, proceeding with original input:', userLookupError);
+          // If we can't lookup users, try the input as email anyway
         }
       }
-      
-      // Default role if no role found
-      console.log('AuthService: No role found, using default CUSTOMER role');
-      return UserRole.CUSTOMER;
-    } catch (error) {
-      console.error('AuthService: Error getting user role:', error);
-      
-      // Try localStorage as emergency fallback
-      const storedUser = localStorage.getItem('currentUser');
-      if (storedUser) {
+
+      // Check if auth instance is available
+      const auth = this.firebaseService.getAuth();
+      if (!auth) {
+        throw new Error('Firebase Auth not initialized');
+      }
+
+      // Use Firebase Auth with resolved email
+      console.log('Attempting login with email:', signInEmail);
+      const credential = await signInWithEmailAndPassword(auth, signInEmail, password);
+      const fbUser = credential.user;
+      const token = await fbUser.getIdToken();
+
+      // Map Firebase user to app user by email/username
+      const users = await this.userManagementService.getUsers().pipe(take(1)).toPromise() || [];
+      const appUser = users.find(u =>
+        (u.email || '').toLowerCase() === (fbUser.email || '').toLowerCase() ||
+        (u.username || '').toLowerCase() === input.toLowerCase()
+      );
+
+      if (!appUser) {
+        // Bootstrap: if this email is allowlisted, grant super_admin on first login
+        const isAllowlisted = this.SUPER_ADMIN_EMAILS.includes((fbUser.email || '').toLowerCase());
+        const roles = isAllowlisted ? ['super_admin'] : [];
+        const minimalUser: User = {
+          id: fbUser.uid,
+          username: fbUser.email || fbUser.uid,
+          email: fbUser.email || '',
+          fullName: fbUser.displayName || (fbUser.email || ''),
+          isActive: true,
+          roles,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+
+        // Best-effort: create user profile in Firestore if missing
         try {
-          const parsedUser = JSON.parse(storedUser);
-          if (parsedUser.email === email && parsedUser.role) {
-            console.log('AuthService: Using stored role as emergency fallback:', parsedUser.role);
-            return parsedUser.role;
-          }
-        } catch (error) {
-          console.log('AuthService: Error parsing stored user for emergency fallback');
+          await this.userManagementService.createUser({
+            username: minimalUser.username,
+            email: minimalUser.email,
+            fullName: minimalUser.fullName,
+            phone: '',
+            department: '',
+            position: '',
+            isActive: true,
+            roles: minimalUser.roles,
+            lastLogin: new Date(),
+            createdBy: 'system',
+            updatedBy: 'system'
+          }).pipe(take(1)).toPromise();
+        } catch (createErr) {
+          console.warn('Could not create user profile on first login:', createErr);
         }
+
+        this.setAuthData(minimalUser, token);
+        this.router.navigate(['/quan-ly-san-pham']);
+        return { success: true, message: 'Đăng nhập thành công', user: minimalUser };
+      }
+
+      // Update last login (best-effort)
+      try {
+        await this.userManagementService.updateUser(appUser.id, { lastLogin: new Date() }).pipe(take(1)).toPromise();
+      } catch (updateError) {
+        console.warn('Could not update last login:', updateError);
+      }
+
+      this.setAuthData(appUser, token);
+      this.router.navigate(['/quan-ly-san-pham']);
+      return { success: true, message: 'Đăng nhập thành công', user: appUser };
+    } catch (error: any) {
+      console.error('Firebase login error:', error);
+      console.error('Error code:', error?.code);
+      console.error('Error message:', error?.message);
+      
+      let message = this.translateFirebaseError(error?.code);
+      
+      // Handle network-request-failed specifically
+      if (error?.code === 'auth/network-request-failed') {
+        message = 'Lỗi kết nối mạng. Vui lòng kiểm tra kết nối internet và thử lại.';
+        console.error('Network request failed - possible causes:');
+        console.error('1. No internet connection');
+        console.error('2. Firebase API keys blocked');
+        console.error('3. App Check blocking requests');
+        console.error('4. CORS issues');
+        console.error('5. Firebase project configuration issues');
       }
       
-      return UserRole.CUSTOMER;
+      return { success: false, message: message || 'Tên đăng nhập hoặc mật khẩu không đúng' };
     }
   }
 
-  // Force preserve role - always use dynamic role
-  private async forcePreserveRole(fbUser: FirebaseUser): Promise<AuthUser> {
-    console.log('AuthService: Force preserving role for:', fbUser.email);
-    
-    // Always get role dynamically
-    const dynamicRole = await this.getUserRole(fbUser.email || '');
-    
-    const authUser: AuthUser = {
-      id: fbUser.uid,
-      email: fbUser.email || '',
-      fullName: fbUser.displayName || fbUser.email || 'User',
-      role: dynamicRole,
-      avatarUrl: fbUser.photoURL || ''
-    };
-    
-    console.log('AuthService: Force preserved role:', authUser);
-    return authUser;
-  }
-
-  // Public method to refresh user role
-  async refreshUserRole(): Promise<void> {
-    const fbUser = this.auth.currentUser;
-    if (fbUser) {
-      console.log('AuthService: Refreshing user role...');
-      const authUser = await this.forcePreserveRole(fbUser);
-      this.currentUserSubject.next(authUser);
-      localStorage.setItem('currentUser', JSON.stringify(authUser));
-      console.log('AuthService: User role refreshed:', authUser);
-    }
-  }
-
-
-  login(email: string, password: string): Observable<boolean> {
-    return new Observable<boolean>(observer => {
-      signInWithEmailAndPassword(this.auth, email, password)
-        .then(() => {
-          observer.next(true);
-          observer.complete();
-        })
-        .catch(() => {
-          observer.next(false);
-          observer.complete();
-        });
-    });
-  }
-
-  loginWithGoogle(): Observable<boolean> {
-    return new Observable<boolean>(observer => {
-      const provider = new GoogleAuthProvider();
-      
-      // Configure provider to avoid popup issues
-      provider.addScope('email');
-      provider.addScope('profile');
-      
-      // Set custom parameters to avoid COOP issues
-      provider.setCustomParameters({
-        'prompt': 'select_account'
-      });
-      
-      console.log('AuthService: Starting Google Sign-In...');
-      
-      signInWithPopup(this.auth, provider)
-        .then((result) => {
-          console.log('AuthService: Google Sign-In successful:', result.user.email);
-          observer.next(true);
-          observer.complete();
-        })
-        .catch((error) => {
-          console.error('AuthService: Google Sign-In error:', error);
-          
-          // Handle specific COOP errors
-          if (error.code === 'auth/popup-blocked') {
-            console.error('AuthService: Popup blocked by browser');
-          } else if (error.code === 'auth/popup-closed-by-user') {
-            console.error('AuthService: Popup closed by user');
-          } else if (error.message.includes('Cross-Origin-Opener-Policy')) {
-            console.error('AuthService: COOP policy blocking popup');
-          }
-          
-          observer.next(false);
-          observer.complete();
-        });
-    });
-  }
-
-  // Alternative Google Sign-In using redirect (avoids COOP issues)
-  loginWithGoogleRedirect(): void {
-    const provider = new GoogleAuthProvider();
-    provider.addScope('email');
-    provider.addScope('profile');
-    
-    console.log('AuthService: Starting Google Sign-In with redirect...');
-    signInWithRedirect(this.auth, provider);
-  }
-
-  // Handle redirect result after Google Sign-In
-  private async handleRedirectResult(): Promise<void> {
+  async changePassword(currentPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> {
     try {
-      const result = await getRedirectResult(this.auth);
-      if (result) {
-        console.log('AuthService: Redirect result received:', result.user.email);
-        // The onAuthStateChanged will handle the authentication
+      const auth = this.firebaseService.getAuth();
+      const fbUser = auth.currentUser;
+      if (!fbUser || !fbUser.email) {
+        return { success: false, message: 'Không xác định được người dùng hiện tại' };
       }
-    } catch (error) {
-      console.error('AuthService: Error handling redirect result:', error);
+
+      const credential = EmailAuthProvider.credential(fbUser.email, currentPassword);
+      await reauthenticateWithCredential(fbUser, credential);
+      await updatePassword(fbUser, newPassword);
+
+      return { success: true, message: 'Đổi mật khẩu thành công' };
+    } catch (error: any) {
+      console.error('Change password error:', error);
+      let message = 'Không thể đổi mật khẩu';
+      switch (error?.code) {
+        case 'auth/weak-password':
+          message = 'Mật khẩu mới quá yếu';
+          break;
+        case 'auth/wrong-password':
+          message = 'Mật khẩu hiện tại không đúng';
+          break;
+        case 'auth/too-many-requests':
+          message = 'Bạn đã thử quá nhiều lần. Vui lòng thử lại sau';
+          break;
+        default:
+          break;
+      }
+      return { success: false, message };
     }
   }
 
   logout(): void {
-    console.log('AuthService: Starting logout process');
-    signOut(this.auth).finally(() => {
+    signOut(this.firebaseService.getAuth()).finally(() => {
       this.clearAuthData();
       this.router.navigate(['/dang-nhap']);
     });
   }
 
-  getCurrentUser(): AuthUser | null {
+  getCurrentUser(): User | null {
     return this.currentUserSubject.value;
   }
 
   isAuthenticated(): boolean {
-    const result = this.isAuthenticatedSubject.value;
-    console.log('AuthService: isAuthenticated() called, result =', result);
-    console.log('AuthService: currentUser =', this.currentUserSubject.value);
-    console.log('AuthService: Firebase currentUser =', this.auth.currentUser);
-    return result;
+    return this.isAuthenticatedSubject.value;
   }
 
-  hasRole(role: UserRole): boolean {
-    const user = this.getCurrentUser();
-    if (!user) {
-      console.log('AuthService: hasRole - No user found');
+  getToken(): string | null {
+    return this.tokenSubject.value;
+  }
+
+  hasPermission(permission: string): Observable<boolean> {
+    const currentUser = this.getCurrentUser();
+    if (!currentUser) {
+      return of(false);
+    }
+    return this.userManagementService.hasPermission(currentUser.id, permission);
+  }
+
+  hasRole(roleName: string): Observable<boolean> {
+    const currentUser = this.getCurrentUser();
+    if (!currentUser) {
+      return of(false);
+    }
+    return this.userManagementService.hasRole(currentUser.id, roleName);
+  }
+
+  /**
+   * Ensure user has valid roles, refresh from Firebase if needed
+   */
+  async ensureUserRoles(): Promise<void> {
+    const currentUser = this.getCurrentUser();
+    if (!currentUser || !currentUser.roles || currentUser.roles.length === 0) {
+      console.log('User has no roles, attempting to refresh from Firebase...');
+      await this.refreshUserData();
+    }
+  }
+
+  /**
+   * Check if current user has any of the specified roles
+   */
+  hasAnyRoleSync(roleNames: string[]): boolean {
+    const currentUser = this.getCurrentUser();
+    if (!currentUser || !currentUser.roles) {
       return false;
     }
-    console.log('AuthService: hasRole - User role:', user.role, 'Type:', typeof user.role);
-    console.log('AuthService: hasRole - Checking against:', role, 'Type:', typeof role);
-    const result = user.role === role;
-    console.log('AuthService: hasRole - Result:', result);
-    return result;
+    return currentUser.roles.some(userRole => {
+      const roleName = typeof userRole === 'string' ? userRole : (userRole as any).name;
+      return roleNames.includes(roleName);
+    });
   }
 
-  isSuperAdmin(): boolean {
-    return this.hasRole(UserRole.SUPER_ADMIN);
+  // Token validity handled by Firebase; keep 24h fallback for stored token
+  isTokenValid(): boolean {
+    const token = this.getToken();
+    if (!token) return false;
+    try {
+      const tokenData = JSON.parse(atob(token.split('.')[1] || ''));
+      const nowSeconds = Math.floor(Date.now() / 1000);
+      return tokenData && tokenData.exp && nowSeconds < tokenData.exp;
+    } catch (error) {
+      return false;
+    }
   }
 
-  isAdmin(): boolean {
-    return this.hasRole(UserRole.ADMIN) || this.hasRole(UserRole.SUPER_ADMIN);
-  }
-
-  canManageUsers(): boolean {
-    return this.isAdmin() || this.isSuperAdmin();
-  }
-
-  // Refresh user data - dynamic role only
   async refreshUserData(): Promise<void> {
     const currentUser = this.getCurrentUser();
     if (!currentUser) return;
-
-    const fbUser = this.auth.currentUser;
-    if (!fbUser) return;
-
-    // Re-authenticate with current Firebase user
-    await this.handleUserAuthentication(fbUser);
-    console.log('AuthService: User data refreshed with dynamic role');
+    
+    try {
+      // Try to get fresh user data from Firebase
+      const users = await this.userManagementService.getUsers().pipe(take(1)).toPromise();
+      const freshUser = (users || []).find(u => u.id === currentUser.id || u.email?.toLowerCase() === currentUser.email?.toLowerCase());
+      
+      if (freshUser) {
+        // Update with fresh data from Firebase
+        this.currentUserSubject.next(freshUser);
+        localStorage.setItem('currentUser', JSON.stringify(freshUser));
+      } else {
+        // If not found in Firebase, keep current user data (preserve roles)
+        console.warn('User not found in Firebase, keeping current data');
+      }
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+      // Keep current user data on error
+    }
   }
 
-  // Force refresh user - dynamic role only
-  async forceReloadUser(): Promise<void> {
-    const fbUser = this.auth.currentUser;
-    if (!fbUser) return;
-
-    console.log('AuthService: Force reloading user with dynamic role');
-    await this.handleUserAuthentication(fbUser);
-  }
-
-  // Force refresh role dynamically
-  async refreshRoleFromEmail(): Promise<void> {
-    const fbUser = this.auth.currentUser;
-    if (!fbUser) return;
-
-    const currentUser = this.getCurrentUser();
-    if (!currentUser) return;
-
-    console.log('AuthService: Refreshing role dynamically for:', fbUser.email);
-    
-    // Get role dynamically
-    const dynamicRole = await this.getUserRole(fbUser.email || '');
-    
-    // Update user with dynamic role
-    const updatedUser: AuthUser = {
-      ...currentUser,
-      role: dynamicRole
-    };
-    
-    this.currentUserSubject.next(updatedUser);
-    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-    console.log('AuthService: Role refreshed dynamically:', updatedUser);
+  private setAuthData(user: User, token: string): void {
+    this.currentUserSubject.next(user);
+    this.isAuthenticatedSubject.next(true);
+    this.tokenSubject.next(token);
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    localStorage.setItem('authToken', token);
   }
 
   private clearAuthData(): void {
-    console.log('AuthService: Clearing auth data only');
     this.currentUserSubject.next(null);
     this.isAuthenticatedSubject.next(false);
-    
-    // Only remove auth-related items, don't clear entire storage
+    this.tokenSubject.next(null);
     localStorage.removeItem('currentUser');
-    localStorage.removeItem('rememberMe');
-    
-    console.log('AuthService: Auth data cleared, Firebase user:', this.auth.currentUser);
+    localStorage.removeItem('authToken');
   }
 
-  // Force clear authentication for testing
-  forceClearAuth(): void {
-    console.log('AuthService: Force clearing authentication state');
-    this.clearAuthData();
-    // Also sign out from Firebase
-    signOut(this.auth).catch(error => {
-      console.error('Error signing out from Firebase:', error);
-    });
+  private translateFirebaseError(code?: string): string | null {
+    switch (code) {
+      case 'auth/invalid-email':
+        return 'Email không hợp lệ';
+      case 'auth/invalid-credential':
+        return 'Thông tin đăng nhập không hợp lệ. Vui lòng kiểm tra lại tài khoản/mật khẩu.';
+      case 'auth/user-disabled':
+        return 'Tài khoản đã bị vô hiệu hóa';
+      case 'auth/user-not-found':
+      case 'auth/wrong-password':
+        return 'Tên đăng nhập hoặc mật khẩu không đúng';
+      case 'auth/too-many-requests':
+        return 'Bạn đã thử quá nhiều lần. Vui lòng thử lại sau';
+      case 'auth/network-request-failed':
+        return 'Lỗi kết nối mạng. Vui lòng kiểm tra kết nối internet và thử lại.';
+      case 'auth/invalid-api-key':
+        return 'API key không hợp lệ. Vui lòng liên hệ quản trị viên.';
+      case 'auth/app-not-authorized':
+        return 'Ứng dụng chưa được ủy quyền. Vui lòng liên hệ quản trị viên.';
+      default:
+        return null;
+    }
   }
 }
