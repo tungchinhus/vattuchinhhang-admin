@@ -9,6 +9,8 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Role, Permission } from '../../../models/user.model';
+import { PermissionService } from '../../../services/permission.service';
+import { Observable } from 'rxjs';
 
 export interface RoleFormData {
   role?: Role;
@@ -37,14 +39,17 @@ export class RoleFormDialogComponent implements OnInit {
   roleForm: FormGroup;
   selectedPermissions: string[] = [];
   isEdit: boolean = false;
+  permissions$: Observable<Permission[]>;
 
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<RoleFormDialogComponent>,
+    private permissionService: PermissionService,
     @Inject(MAT_DIALOG_DATA) public data: RoleFormData
   ) {
     this.isEdit = data.isEdit;
     this.selectedPermissions = data.role?.permissions?.map(p => p.id) || [];
+    this.permissions$ = this.permissionService.getPermissions();
     
     this.roleForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
@@ -80,7 +85,23 @@ export class RoleFormDialogComponent implements OnInit {
   }
 
   getPermissionsByModule(module: string): Permission[] {
-    return this.data.permissions.filter(p => p.module === module);
+    // Tạm thời return empty array, sẽ được cập nhật trong template
+    return [];
+  }
+
+  getUniqueModules(): string[] {
+    // Tạm thời return empty array, sẽ được cập nhật trong template
+    return [];
+  }
+
+  // New methods for working with permissions list
+  getUniqueModulesFromPermissions(permissions: Permission[]): string[] {
+    const modules = permissions.map(p => p.module);
+    return [...new Set(modules)].sort();
+  }
+
+  getPermissionsByModuleFromList(permissions: Permission[], module: string): Permission[] {
+    return permissions.filter(p => p.module === module);
   }
 
   getModuleDisplayName(module: string): string {
@@ -111,24 +132,23 @@ export class RoleFormDialogComponent implements OnInit {
     return actionNames[action] || action;
   }
 
-  getUniqueModules(): string[] {
-    const modules = this.data.permissions.map(p => p.module);
-    return [...new Set(modules)].sort();
-  }
-
   onSubmit(): void {
     if (this.roleForm.valid && this.selectedPermissions.length > 0) {
       const formValue = this.roleForm.value;
-      const selectedPermissionObjects = this.data.permissions.filter(p => 
-        this.selectedPermissions.includes(p.id)
-      );
       
-      const roleData = {
-        ...formValue,
-        permissions: selectedPermissionObjects
-      };
-      
-      this.dialogRef.close(roleData);
+      // Lấy permissions từ service thay vì data
+      this.permissionService.getPermissions().subscribe(permissions => {
+        const selectedPermissionObjects = permissions.filter(p => 
+          this.selectedPermissions.includes(p.id)
+        );
+        
+        const roleData = {
+          ...formValue,
+          permissions: selectedPermissionObjects
+        };
+        
+        this.dialogRef.close(roleData);
+      });
     }
   }
 

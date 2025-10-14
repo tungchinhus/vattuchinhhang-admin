@@ -39,20 +39,12 @@ export const routes: Routes = [
   {
     path: 'quan-ly-user',
     loadComponent: () => import('./components/quan-ly-user/quan-ly-user.component').then(m => m.QuanLyUserComponent),
-    canActivate: [AuthGuard],
-    data: { 
-      roles: ['super_admin', 'admin'],
-      permissions: ['user_view']
-    }
+    canActivate: [AuthGuard]
   },
   {
     path: 'quan-ly-phan-quyen',
     loadComponent: () => import('./components/quan-ly-phan-quyen/quan-ly-phan-quyen.component').then(m => m.QuanLyPhanQuyenComponent),
-    canActivate: [AuthGuard],
-    data: { 
-      roles: ['super_admin', 'admin'],
-      permissions: ['role_view']
-    }
+    canActivate: [AuthGuard]
   },
   {
     path: 'role-test',
@@ -68,8 +60,5 @@ export const routes: Routes = [
     path: 'ai-test',
     loadComponent: () => import('./components/ai-test/ai-test.component').then(m => m.AiTestComponent)
   },
-  {
-    path: 'firebase-test',
-    loadComponent: () => import('./components/firebase-test/firebase-test.component').then(m => m.FirebaseTestComponent)
-  },
+  // permission-test route removed because the component was deleted
 ];

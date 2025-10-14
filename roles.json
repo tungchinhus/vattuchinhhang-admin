@@ -1,0 +1,65 @@
+{
+  "roles": {
+    "super_admin": {
+      "id": "super_admin",
+      "name": "super_admin",
+      "displayName": "Super Admin",
+      "description": "Quản trị viên cấp cao với toàn quyền",
+      "permissions": [
+        "user_view", "user_create", "user_update", "user_delete",
+        "role_view", "role_create", "role_update", "role_delete", "role_assign",
+        "report_view", "report_export",
+        "settings_view", "settings_update", "system_config"
+      ],
+      "isActive": true
+    },
+    "admin": {
+      "id": "admin",
+      "name": "admin",
+      "displayName": "Admin",
+      "description": "Quản trị viên với quyền quản lý hệ thống",
+      "permissions": [
+        "user_view", "user_create", "user_update",
+        "role_view", "role_create", "role_update", "role_assign",
+        "report_view", "report_export",
+        "settings_view", "settings_update"
+      ],
+      "isActive": true
+    },
+    "manager": {
+      "id": "manager",
+      "name": "manager",
+      "displayName": "Manager",
+      "description": "Quản lý với quyền quản lý nhân viên và dữ liệu",
+      "permissions": [
+        "user_view",
+        "role_view",
+        "report_view", "report_export",
+        "settings_view"
+      ],
+      "isActive": true
+    },
+    "user": {
+      "id": "user",
+      "name": "user",
+      "displayName": "Người dùng",
+      "description": "Người dùng thông thường",
+      "permissions": [
+        "user_view"
+      ],
+      "isActive": true
+    },
+    "viewer": {
+      "id": "viewer",
+      "name": "viewer",
+      "displayName": "Người xem",
+      "description": "Chỉ có quyền xem dữ liệu",
+      "permissions": [
+        "user_view",
+        "role_view",
+        "report_view"
+      ],
+      "isActive": true
+    }
+  }
+}

@@ -78,7 +78,7 @@ export class ProductFormComponent {
   images: string[] = [];
   category = '';
   stock = 0;
-  status: ProductStatus = 'pending';
+  status: ProductStatus = ProductStatus.PENDING;
   specsJson = '';
 
   constructor(private productService: ProductService) {}

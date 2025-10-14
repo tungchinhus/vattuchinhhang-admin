@@ -1,0 +1,356 @@
+<div class="page-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <mat-icon class="page-icon">{{ icon }}</mat-icon>
+    <h1>{{ title }}</h1>
+    <div class="header-actions">
+      <button mat-raised-button color="primary" (click)="openAddDialog()">
+        <mat-icon>add</mat-icon>
+        Thêm sản phẩm
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter Section -->
+  <mat-card class="filter-card">
+    <mat-card-content>
+      <form [formGroup]="filterForm">
+        <div class="filter-row">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Tìm kiếm sản phẩm</mat-label>
+            <input matInput 
+                   placeholder="Tên, model, SKU, thương hiệu..." 
+                   (input)="onSearchChange($event)"
+                   [value]="searchTerm()">
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+        </div>
+
+        <div class="filter-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Danh mục</mat-label>
+            <mat-select formControlName="category">
+              <mat-option value="">Tất cả</mat-option>
+              <mat-option *ngFor="let category of categories" [value]="category">
+                {{ getCategoryDisplayName(category) }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Trạng thái</mat-label>
+            <mat-select formControlName="status">
+              <mat-option value="">Tất cả</mat-option>
+              <mat-option *ngFor="let status of statuses" [value]="status">
+                {{ getStatusDisplayName(status) }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Thương hiệu</mat-label>
+            <input matInput formControlName="brand" placeholder="Karofi, Kangaroo...">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Giá từ</mat-label>
+            <input matInput type="number" formControlName="priceMin" placeholder="0">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Giá đến</mat-label>
+            <input matInput type="number" formControlName="priceMax" placeholder="50000000">
+          </mat-form-field>
+        </div>
+
+        <div class="filter-checkboxes">
+          <mat-checkbox formControlName="isFeatured">Sản phẩm nổi bật</mat-checkbox>
+          <mat-checkbox formControlName="isNew">Sản phẩm mới</mat-checkbox>
+          <button mat-button class="clear-filters-btn" (click)="clearFilters()">
+            <mat-icon>clear</mat-icon>
+            Xóa bộ lọc
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Products Table -->
+  <mat-card class="table-card">
+    <mat-card-content>
+      <div class="table-header">
+        <div class="table-info">
+          <span>Tổng cộng: {{ totalItems }} sản phẩm</span>
+        </div>
+      </div>
+
+      <div class="table-container" *ngIf="!isLoading(); else loadingTemplate">
+        <table mat-table [dataSource]="filteredProducts()" class="products-table">
+          
+          <!-- Image Column -->
+          <ng-container matColumnDef="image">
+            <th mat-header-cell *matHeaderCellDef>Hình ảnh</th>
+            <td mat-cell *matCellDef="let product">
+              <img [src]="getProductImage(product)" 
+                   [alt]="product.name"
+                   class="product-image">
+            </td>
+          </ng-container>
+
+          <!-- Name Column -->
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Tên sản phẩm</th>
+            <td mat-cell *matCellDef="let product">
+              <div class="product-name">
+                <div class="name">{{ product.name }}</div>
+                <div class="sku">SKU: {{ product.sku }}</div>
+                <div class="badges">
+                  <span *ngIf="product.isNew" class="badge new">Mới</span>
+                  <span *ngIf="product.isFeatured" class="badge featured">Nổi bật</span>
+                  <span *ngIf="product.discount" class="badge discount">-{{ product.discount }}%</span>
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Model Column -->
+          <ng-container matColumnDef="model">
+            <th mat-header-cell *matHeaderCellDef>Model</th>
+            <td mat-cell *matCellDef="let product">{{ product.model }}</td>
+          </ng-container>
+
+          <!-- Category Column -->
+          <ng-container matColumnDef="category">
+            <th mat-header-cell *matHeaderCellDef>Danh mục</th>
+            <td mat-cell *matCellDef="let product">
+              <span class="category-badge">{{ getCategoryDisplayName(product.category) }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Brand Column -->
+          <ng-container matColumnDef="brand">
+            <th mat-header-cell *matHeaderCellDef>Thương hiệu</th>
+            <td mat-cell *matCellDef="let product">{{ product.brand }}</td>
+          </ng-container>
+
+          <!-- Price Column -->
+          <ng-container matColumnDef="price">
+            <th mat-header-cell *matHeaderCellDef>Giá</th>
+            <td mat-cell *matCellDef="let product">
+              <div class="price-info">
+                <div class="current-price">{{ formatPrice(product.price) }}</div>
+                <div *ngIf="product.originalPrice" class="original-price">
+                  {{ formatPrice(product.originalPrice) }}
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Stock Column -->
+          <ng-container matColumnDef="stock">
+            <th mat-header-cell *matHeaderCellDef>Tồn kho</th>
+            <td mat-cell *matCellDef="let product">
+              <span class="stock-badge" [class]="'stock-' + getStockColor(product.stock)">
+                {{ product.stock }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Trạng thái</th>
+            <td mat-cell *matCellDef="let product">
+              <span class="status-badge" [class]="'status-' + getStatusColor(product.status)">
+                {{ getStatusDisplayName(product.status) }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Thao tác</th>
+            <td mat-cell *matCellDef="let product">
+              <button mat-icon-button [matMenuTriggerFor]="actionMenu">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #actionMenu="matMenu">
+                <button mat-menu-item (click)="openEditDialog(product)">
+                  <mat-icon>edit</mat-icon>
+                  <span>Chỉnh sửa</span>
+                </button>
+                <button mat-menu-item (click)="toggleProductStatus(product)">
+                  <mat-icon>{{ product.status === 'active' ? 'pause' : 'play_arrow' }}</mat-icon>
+                  <span>{{ product.status === 'active' ? 'Tạm ngưng' : 'Kích hoạt' }}</span>
+                </button>
+                <mat-divider></mat-divider>
+                <button mat-menu-item (click)="deleteProduct(product)" class="delete-action">
+                  <mat-icon>delete</mat-icon>
+                  <span>Xóa</span>
+                </button>
+              </mat-menu>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        <mat-paginator 
+          [length]="totalItems"
+          [pageSize]="pageSize"
+          [pageIndex]="pageIndex"
+          [pageSizeOptions]="[5, 10, 25, 50]"
+          (page)="onPageChange($event)"
+          showFirstLastButtons>
+        </mat-paginator>
+      </div>
+
+      <ng-template #loadingTemplate>
+        <div class="loading-container">
+          <mat-spinner diameter="50"></mat-spinner>
+          <p>Đang tải dữ liệu...</p>
+        </div>
+      </ng-template>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Product Dialog -->
+  <div class="dialog-overlay" *ngIf="isDialogOpen()" (click)="closeDialog()">
+    <div class="dialog-container" (click)="$event.stopPropagation()">
+      <div class="dialog-header">
+        <h2>{{ isEditMode() ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới' }}</h2>
+        <button mat-icon-button (click)="closeDialog()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="dialog-content">
+        <form [formGroup]="productForm" (ngSubmit)="saveProduct()">
+          <mat-tab-group>
+            <!-- Basic Info Tab -->
+            <mat-tab label="Thông tin cơ bản">
+              <div class="form-grid">
+                <mat-form-field appearance="outline">
+                  <mat-label>Tên sản phẩm *</mat-label>
+                  <input matInput formControlName="name" placeholder="Nhập tên sản phẩm">
+                  <mat-error *ngIf="productForm.get('name')?.hasError('required')">
+                    Tên sản phẩm là bắt buộc
+                  </mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Model *</mat-label>
+                  <input matInput formControlName="model" placeholder="Nhập model">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Danh mục *</mat-label>
+                  <mat-select formControlName="category">
+                    <mat-option *ngFor="let category of categories" [value]="category">
+                      {{ getCategoryDisplayName(category) }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Thương hiệu *</mat-label>
+                  <input matInput formControlName="brand" placeholder="Nhập thương hiệu">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Giá bán *</mat-label>
+                  <input matInput type="number" formControlName="price" placeholder="0">
+                  <span matSuffix>VNĐ</span>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Giá gốc</mat-label>
+                  <input matInput type="number" formControlName="originalPrice" placeholder="0">
+                  <span matSuffix>VNĐ</span>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>SKU *</mat-label>
+                  <input matInput formControlName="sku" placeholder="Nhập SKU">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Xuất xứ *</mat-label>
+                  <input matInput formControlName="origin" placeholder="Nhập xuất xứ">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Tồn kho *</mat-label>
+                  <input matInput type="number" formControlName="stock" placeholder="0">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Bảo hành *</mat-label>
+                  <input matInput formControlName="warranty" placeholder="36 tháng">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Trạng thái *</mat-label>
+                  <mat-select formControlName="status">
+                    <mat-option *ngFor="let status of statuses" [value]="status">
+                      {{ getStatusDisplayName(status) }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Giảm giá (%)</mat-label>
+                  <input matInput type="number" formControlName="discount" placeholder="0">
+                </mat-form-field>
+              </div>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Mô tả sản phẩm *</mat-label>
+                <textarea matInput formControlName="description" rows="4" placeholder="Nhập mô tả chi tiết về sản phẩm"></textarea>
+              </mat-form-field>
+
+              <div class="checkbox-group">
+                <mat-checkbox formControlName="isFeatured">Sản phẩm nổi bật</mat-checkbox>
+                <mat-checkbox formControlName="isNew">Sản phẩm mới</mat-checkbox>
+              </div>
+            </mat-tab>
+
+            <!-- Specifications Tab -->
+            <mat-tab label="Thông số kỹ thuật">
+              <div class="specifications-section">
+                <h3>Thông số kỹ thuật</h3>
+                <p class="section-description">Thêm các thông số kỹ thuật của sản phẩm</p>
+                <!-- Specifications will be implemented here -->
+              </div>
+            </mat-tab>
+
+            <!-- Features Tab -->
+            <mat-tab label="Tính năng">
+              <div class="features-section">
+                <h3>Tính năng sản phẩm</h3>
+                <p class="section-description">Thêm các tính năng nổi bật của sản phẩm</p>
+                <!-- Features will be implemented here -->
+              </div>
+            </mat-tab>
+
+            <!-- Images Tab -->
+            <mat-tab label="Hình ảnh">
+              <div class="images-section">
+                <h3>Hình ảnh sản phẩm</h3>
+                <p class="section-description">Upload hình ảnh sản phẩm</p>
+                <!-- Image upload will be implemented here -->
+              </div>
+            </mat-tab>
+          </mat-tab-group>
+        </form>
+      </div>
+
+      <div class="dialog-actions">
+        <button mat-button (click)="closeDialog()">Hủy</button>
+        <button mat-raised-button color="primary" (click)="saveProduct()">
+          {{ isEditMode() ? 'Cập nhật' : 'Thêm mới' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,13 @@
+{
+  "name": "firebase-permissions-importer",
+  "version": "1.0.0",
+  "description": "Import permissions to Firebase Firestore",
+  "main": "import-permissions-simple.js",
+  "scripts": {
+    "import": "node import-permissions-simple.js",
+    "install-deps": "npm install firebase"
+  },
+  "dependencies": {
+    "firebase": "^10.0.0"
+  }
+}

@@ -23,20 +23,18 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize App Check with reCAPTCHA Enterprise
-// Note: Cấu hình reCAPTCHA site key trong app-check.config.ts
-// Temporarily disabled for debugging connectivity issues
+// Initialize App Check with reCAPTCHA Enterprise (Debug mode for development)
 let appCheck: any = null;
 try {
-  // Temporarily disable App Check to debug network issues
-  console.log('App Check temporarily disabled for debugging');
-  appCheck = null;
-  
-  // Uncomment below to re-enable App Check after fixing network issues
-  // appCheck = initializeAppCheck(app, {
-  //   provider: new ReCaptchaEnterpriseProvider(APP_CHECK_CONFIG.RECAPTCHA_SITE_KEY),
-  //   isTokenAutoRefreshEnabled: APP_CHECK_CONFIG.IS_TOKEN_AUTO_REFRESH_ENABLED
-  // });
+  // Enable App Check debug token in development so the SDK sends a valid token
+  // @ts-ignore
+  (self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+
+  appCheck = initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider(APP_CHECK_CONFIG.RECAPTCHA_SITE_KEY),
+    isTokenAutoRefreshEnabled: APP_CHECK_CONFIG.IS_TOKEN_AUTO_REFRESH_ENABLED
+  });
+  console.log('App Check initialized with reCAPTCHA Enterprise (debug mode)');
 } catch (error) {
   console.warn('App Check initialization failed, continuing without App Check:', error);
   appCheck = null;

@@ -104,6 +104,7 @@ export class ProductService {
       supplierId,
       name: data.name,
       slug: data.slug,
+      description: data.description || data.shortDescription || data.fullDescription || '',
       shortDescription: data.shortDescription,
       fullDescription: data.fullDescription,
       price: data.price,

@@ -93,18 +93,24 @@ export class QuanLySanPhamComponent implements OnInit {
   }
 
   async approve(p: Product): Promise<void> {
-    await this.productService.updateProduct(p.supplierId, p.id, { status: 'approved' });
-    await this.reload();
+    if (p.supplierId) {
+      await this.productService.updateProduct(p.supplierId, p.id, { status: ProductStatus.APPROVED });
+      await this.reload();
+    }
   }
 
   async reject(p: Product): Promise<void> {
-    await this.productService.updateProduct(p.supplierId, p.id, { status: 'rejected' });
-    await this.reload();
+    if (p.supplierId) {
+      await this.productService.updateProduct(p.supplierId, p.id, { status: ProductStatus.REJECTED });
+      await this.reload();
+    }
   }
 
   async hide(p: Product): Promise<void> {
-    await this.productService.updateProduct(p.supplierId, p.id, { status: 'hidden' });
-    await this.reload();
+    if (p.supplierId) {
+      await this.productService.updateProduct(p.supplierId, p.id, { status: ProductStatus.HIDDEN });
+      await this.reload();
+    }
   }
 }
 

@@ -35,27 +35,45 @@
           <p class="permissions-description">Chọn các quyền hạn cho vai trò này</p>
           
           <div class="permissions-list">
-            <div *ngFor="let module of getUniqueModules()" class="module-section">
-              <h5 class="module-title">
-                <mat-icon>folder</mat-icon>
-                {{getModuleDisplayName(module)}}
-              </h5>
-              <div class="permissions-grid">
-                <mat-checkbox 
-                  *ngFor="let permission of getPermissionsByModule(module)" 
-                  [checked]="isPermissionSelected(permission.id)"
-                  (change)="onPermissionSelectionChange(permission.id, $event.checked)"
-                  class="permission-checkbox">
-                  <div class="permission-info">
-                    <div class="permission-header">
-                      <mat-icon class="permission-icon">{{getPermissionIcon(permission.action)}}</mat-icon>
-                      <span class="permission-name">{{permission.displayName}}</span>
+            <!-- Loading indicator -->
+            <div *ngIf="permissions$ | async as permissions; else loadingTemplate">
+              <!-- Group permissions by module -->
+              <div *ngFor="let module of getUniqueModulesFromPermissions(permissions)" class="module-section">
+                <h5 class="module-title">
+                  <mat-icon>folder</mat-icon>
+                  {{getModuleDisplayName(module)}}
+                </h5>
+                <div class="permissions-grid">
+                  <mat-checkbox 
+                    *ngFor="let permission of getPermissionsByModuleFromList(permissions, module)" 
+                    [checked]="isPermissionSelected(permission.id)"
+                    (change)="onPermissionSelectionChange(permission.id, $event.checked)"
+                    class="permission-checkbox">
+                    <div class="permission-info">
+                      <div class="permission-header">
+                        <mat-icon class="permission-icon">{{getPermissionIcon(permission.action)}}</mat-icon>
+                        <span class="permission-name">{{permission.displayName}}</span>
+                      </div>
+                      <span class="permission-action">{{getActionDisplayName(permission.action)}}</span>
                     </div>
-                    <span class="permission-action">{{getActionDisplayName(permission.action)}}</span>
-                  </div>
-                </mat-checkbox>
+                  </mat-checkbox>
+                </div>
+              </div>
+              
+              <!-- No permissions message -->
+              <div *ngIf="permissions.length === 0" class="no-permissions">
+                <mat-icon>warning</mat-icon>
+                <p>Không có quyền hạn nào được tìm thấy. Vui lòng kiểm tra Firebase.</p>
               </div>
             </div>
+            
+            <!-- Loading template -->
+            <ng-template #loadingTemplate>
+              <div class="loading-permissions">
+                <mat-icon>refresh</mat-icon>
+                <p>Đang tải danh sách quyền hạn...</p>
+              </div>
+            </ng-template>
           </div>
           
           <div *ngIf="selectedPermissions.length === 0" class="error-message">
