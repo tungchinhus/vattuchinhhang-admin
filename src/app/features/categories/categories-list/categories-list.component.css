@@ -1,0 +1,13 @@
+h2 { margin: 0 0 8px; }
+ .actions { display:flex; gap:8px; align-items:center; margin: 8px 0 12px; }
+ .actions .search { flex: 1; max-width: 340px; }
+ .tree { list-style: none; padding: 0; margin: 0; }
+ .tree > li { margin-bottom: 6px; }
+ .node { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid #eee; border-radius: 6px; }
+ .node img { width: 28px; height: 28px; object-fit: cover; border-radius: 4px; }
+ .node .name { font-weight: 600; }
+ .node .desc { color: #666; }
+ .node .spacer { flex: 1; }
+ .children { list-style: none; padding-left: 20px; margin-top: 6px; }
+
+

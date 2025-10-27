@@ -1,0 +1,27 @@
+<h2>Quản lý sản phẩm</h2>
+<div *ngIf="loading">Đang tải...</div>
+<table *ngIf="!loading">
+  <thead>
+    <tr>
+      <th>Tên</th>
+      <th>Model</th>
+      <th>Thương hiệu</th>
+      <th>Danh mục</th>
+      <th>Giá niêm yết</th>
+      <th>Tình trạng</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let p of products">
+      <td>{{ p.name }}</td>
+      <td>{{ p.model }}</td>
+      <td>{{ p.brand }}</td>
+      <td>{{ p.categories.join(', ') }}</td>
+      <td>{{ p.pricing.list_price_vnd | number }}</td>
+      <td>{{ p.availability.status }}</td>
+    </tr>
+  </tbody>
+  
+</table>
+
+

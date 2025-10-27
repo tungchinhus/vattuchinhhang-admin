@@ -8,13 +8,15 @@ export const routes: Routes = [
     pathMatch: 'full'
   },
   {
-    path: 'products/new',
-    loadComponent: () => import('./components/product-form/product-form.component').then(m => m.ProductFormComponent),
-    canActivate: [AuthGuard]
+    path: 'combos',
+    loadChildren: () => import('./features/combos/combos.routes').then(m => m.COMBOS_ROUTES),
+    canActivate: [AuthGuard],
+    data: { roles: ['super_admin', 'admin', 'seller'] }
   },
   {
-    path: 'products/:slug',
-    loadComponent: () => import('./components/product-detail/product-detail.component').then(m => m.ProductDetailComponent)
+    path: 'products',
+    loadChildren: () => import('./features/products/products.routes').then(m => m.PRODUCTS_ROUTES),
+    canActivate: [AuthGuard]
   },
   {
     path: 'categories/:slug',
@@ -61,4 +63,46 @@ export const routes: Routes = [
     loadComponent: () => import('./components/ai-test/ai-test.component').then(m => m.AiTestComponent)
   },
   // permission-test route removed because the component was deleted
+  {
+    path: 'users',
+    loadChildren: () => import('./features/users/users.routes').then(m => m.USERS_ROUTES),
+    canActivate: [AuthGuard],
+    data: { roles: ['super_admin', 'admin'] }
+  },
+  {
+    path: 'sellers',
+    loadChildren: () => import('./features/sellers/sellers.routes').then(m => m.SELLERS_ROUTES),
+    canActivate: [AuthGuard],
+    data: { roles: ['super_admin', 'admin', 'seller'] }
+  },
+  {
+    path: 'orders',
+    loadChildren: () => import('./features/orders/orders.routes').then(m => m.ORDERS_ROUTES),
+    canActivate: [AuthGuard],
+    data: { roles: ['super_admin', 'admin', 'seller', 'buyer'] }
+  },
+  {
+    path: 'moderation',
+    loadChildren: () => import('./features/moderation/moderation.routes').then(m => m.MODERATION_ROUTES),
+    canActivate: [AuthGuard],
+    data: { roles: ['super_admin', 'admin'] }
+  },
+  {
+    path: 'brands',
+    loadChildren: () => import('./features/brands/brands.routes').then(m => m.BRANDS_ROUTES),
+    canActivate: [AuthGuard],
+    data: { roles: ['super_admin', 'admin'] }
+  },
+  {
+    path: 'categories',
+    loadChildren: () => import('./features/categories/categories.routes').then(m => m.CATEGORIES_ROUTES),
+    canActivate: [AuthGuard],
+    data: { roles: ['super_admin', 'admin'] }
+  },
+  {
+    path: 'reviews',
+    loadChildren: () => import('./features/reviews/reviews.routes').then(m => m.REVIEWS_ROUTES),
+    canActivate: [AuthGuard],
+    data: { roles: ['super_admin', 'admin', 'seller', 'buyer'] }
+  }
 ];

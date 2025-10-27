@@ -1,0 +1,37 @@
+<h2>Categories</h2>
+<div class="actions">
+  <button (click)="openCreate()">+ Thêm danh mục</button>
+  <input class="search" placeholder="Tìm danh mục..." [(ngModel)]="keyword" />
+  <button (click)="refresh()">Tải lại</button>
+  </div>
+
+<ul class="tree">
+  <ng-container *ngFor="let node of tree">
+    <li>
+      <div class="node">
+        <img *ngIf="node.imageURL" [src]="node.imageURL" alt="icon" />
+        <span class="name">{{ node.name }}</span>
+        <span class="desc" *ngIf="node.description">- {{ node.description }}</span>
+        <span class="spacer"></span>
+        <button (click)="edit(node)">Sửa</button>
+        <button (click)="remove(node)">Xóa</button>
+      </div>
+      <ul *ngIf="node.children?.length" class="children">
+        <ng-container *ngFor="let child of node.children">
+          <li>
+            <div class="node">
+              <img *ngIf="child.imageURL" [src]="child.imageURL" alt="icon" />
+              <span class="name">{{ child.name }}</span>
+              <span class="desc" *ngIf="child.description">- {{ child.description }}</span>
+              <span class="spacer"></span>
+              <button (click)="edit(child)">Sửa</button>
+              <button (click)="remove(child)">Xóa</button>
+            </div>
+          </li>
+        </ng-container>
+      </ul>
+    </li>
+  </ng-container>
+</ul>
+
+

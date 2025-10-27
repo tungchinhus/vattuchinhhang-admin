@@ -112,6 +112,14 @@ export class App implements OnInit, OnDestroy {
     return this.authService.hasAnyRoleSync(['admin', 'super_admin']);
   }
 
+  hasSellerRole(): boolean {
+    return this.authService.hasAnyRoleSync(['seller', 'admin', 'super_admin']);
+  }
+
+  hasBuyerRole(): boolean {
+    return this.authService.hasAnyRoleSync(['buyer', 'admin', 'super_admin']);
+  }
+
   logout(): void {
     this.authService.logout();
     // Stay on current page, just clear authentication

@@ -1,0 +1,21 @@
+<h2>Danh mục - Form</h2>
+<form [formGroup]="form" (ngSubmit)="save()">
+  <div class="grid">
+    <label>Tên</label>
+    <input type="text" formControlName="name" />
+
+    <label>Mô tả</label>
+    <textarea rows="3" formControlName="description"></textarea>
+
+    <label>Ảnh</label>
+    <input type="text" formControlName="imageURL" />
+
+    <label>Danh mục cha</label>
+    <input type="text" formControlName="parentCategoryId" placeholder="id danh mục cha (nếu có)" />
+  </div>
+  <div class="actions">
+    <button type="submit">Lưu</button>
+  </div>
+</form>
+
+

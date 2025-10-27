@@ -313,6 +313,25 @@ export class AuthService {
   }
 
   /**
+   * Synchronous permission check for template directives
+   * - Grants all permissions to super_admin
+   * - Optionally reads cached permissions from localStorage key 'userPermissions'
+   */
+  hasPermissionSync(permission: string): boolean {
+    const currentUser = this.getCurrentUser();
+    if (!currentUser) return false;
+    if (currentUser.roles?.includes('super_admin')) return true;
+    try {
+      const cached = localStorage.getItem('userPermissions');
+      if (!cached) return false;
+      const perms: string[] = JSON.parse(cached);
+      return Array.isArray(perms) && perms.includes(permission);
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * Ensure user has valid roles, refresh from Firebase if needed
    */
   async ensureUserRoles(): Promise<void> {

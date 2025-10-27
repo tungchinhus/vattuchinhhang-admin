@@ -1,0 +1,36 @@
+<h2>Combo - Form</h2>
+<form [formGroup]="form" (ngSubmit)="save()">
+  <div class="grid">
+    <label>Tên</label>
+    <input type="text" formControlName="name" />
+
+    <label>Mô tả</label>
+    <textarea rows="3" formControlName="description"></textarea>
+
+    <label>Giá</label>
+    <input type="number" formControlName="price" />
+
+    <label>Giá giảm</label>
+    <input type="number" formControlName="discountPrice" />
+
+    <label>Ảnh</label>
+    <input type="text" formControlName="imageURL" />
+
+    <div class="full">
+      <h3>Sản phẩm trong combo</h3>
+      <button type="button" (click)="addProduct()">+ Thêm sản phẩm</button>
+      <div formArrayName="products">
+        <div class="product-row" *ngFor="let p of products.controls; let i = index" [formGroupName]="i">
+          <input placeholder="productId" formControlName="productId" />
+          <input type="number" placeholder="Số lượng" formControlName="quantity" />
+          <button type="button" (click)="removeProduct(i)">Xóa</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="actions">
+    <button type="submit">Lưu</button>
+  </div>
+</form>
+
+

@@ -1,0 +1,11 @@
+<h2>Combos</h2>
+<a routerLink="new">Thêm combo</a>
+<div *ngIf="loading">Đang tải...</div>
+<div *ngIf="!loading && combos.length === 0">Chưa có combo</div>
+<ul *ngIf="!loading && combos.length > 0">
+  <li *ngFor="let c of combos">
+    <strong>{{ c.name }}</strong> - {{ c.price | number }}
+  </li>
+  </ul>
+
+
